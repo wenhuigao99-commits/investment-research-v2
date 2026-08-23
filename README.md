@@ -4,8 +4,8 @@
 
 ## 页面结构
 
-- `gold/index.html`：黄金报告索引
-- `gold/latest.html`：最新报告固定链接
-- `gold/reports/YYYY-MM-DD.html`：按日期归档的历史报告
+- `index.html`：黄金报告索引
+- `latest.html`：最新报告固定链接
+- `YYYY-MM-DD.html`：按日期归档的历史报告
 
 报告规则：周一至周五北京时间 06:00 生成；周末不生成。XAU/USD 是唯一价格基准，辅助数据必须标注来源、日期、发布日期、滞后天数和缺口，任何情况下不编造数据。
