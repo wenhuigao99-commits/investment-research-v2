@@ -80,6 +80,22 @@
     @media(max-width:980px){.health-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:820px){.product-overview{grid-template-columns:1fr}.delta-pane{border-left:0;border-top:1px solid var(--line)}.health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.event-study-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   </style>
+  <style>
+    .quality-overview{display:grid;grid-template-columns:minmax(190px,.7fr) minmax(0,1.4fr) minmax(230px,.9fr);gap:0;overflow:hidden}
+    .quality-score-pane,.quality-coverage-pane,.quality-check-pane{padding:13px 15px}
+    .quality-score-pane{background:#FFF8E8;border-right:1px solid var(--line)}
+    .quality-coverage-pane{border-right:1px solid var(--line)}
+    .quality-score{font-size:25px;line-height:1.1;font-weight:850;color:var(--gold-dark);margin-top:7px}
+    .quality-caption{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.45}
+    .coverage-bar{display:flex;height:9px;overflow:hidden;border-radius:99px;background:#EEE8DB;margin-top:10px}
+    .coverage-bar span{display:block;height:100%}.coverage-verified{background:var(--signal)}.coverage-partial{background:var(--warn)}.coverage-missing{background:var(--danger)}.coverage-na{background:#A9A39A}
+    .coverage-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px;font-size:10px;color:var(--muted)}
+    .coverage-legend b{display:block;color:var(--ink);font-size:12px}.quality-risk-list{display:grid;gap:5px;margin:7px 0 0;padding-left:16px;color:#5C5A55;font-size:11px;line-height:1.45}
+    .quality-check-list{display:grid;gap:5px;margin-top:8px}.quality-check{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:10px;border-bottom:1px dashed var(--line);padding-bottom:4px}.quality-check:last-child{border-bottom:0}.check-pass{color:var(--signal)}.check-warn{color:var(--warn)}.check-fail{color:var(--danger)}
+    .real-yield-audit{margin-top:10px;border:1px solid var(--line);border-radius:9px;background:#FFFCF5;padding:10px}.real-yield-audit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}.real-yield-audit-cell{border:1px solid var(--line);border-radius:7px;background:var(--paper);padding:7px}.real-yield-audit-cell small{display:block;color:var(--muted);font-size:9px}.real-yield-audit-cell b{display:block;margin-top:3px;font-size:12px}
+    .evidence-badge{display:inline-flex;align-items:center;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:800;margin-left:5px}.evidence-fact{color:var(--signal);background:#ECF8F3}.evidence-partial{color:var(--warn);background:#FFF5E3}.evidence-missing{color:var(--danger);background:#FFF0EF}
+    @media(max-width:820px){.quality-overview{grid-template-columns:1fr}.quality-score-pane,.quality-coverage-pane{border-right:0;border-bottom:1px solid var(--line)}.real-yield-audit-grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 <div class="shell">
@@ -91,9 +107,9 @@
         <p id="reportBasis" class="mt-1 text-xs muted">数据基准：2026年8月21日周五收盘 + 2026年8月23日最新公开报价　|　抓取时间：2026年8月23日 08:51 UTC　|　研究对象：XAU/USD现货，不含COMEX价格</p>
       </div>
       <div class="text-right text-xs">
-        <div><span class="status-dot dot-warn"></span><strong class="warn-text">轻度看多</strong></div>
-        <div class="muted mt-1">上行趋势中的加速阶段</div>
-        <div class="mt-2 tag tag-gold">低置信度 · 不追涨</div>
+        <div><span class="status-dot dot-warn"></span><strong id="currentRating" class="warn-text">读取报告数据</strong></div>
+        <div id="currentMarketState" class="muted mt-1">读取报告数据</div>
+        <div id="currentConfidence" class="mt-2 tag tag-gold">读取报告数据</div>
       </div>
     </div>
     <div class="mt-4 border-t hairline pt-3 flex flex-wrap items-center justify-between gap-3">
@@ -101,12 +117,12 @@
       <nav class="hidden sm:flex gap-1 text-[11px] muted"><a href="#price" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">价格结构</a><a href="#drivers" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">驱动归因</a><a href="#gap" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">预期差</a><a href="#audit" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">数据账本</a></nav>
     </div>
     <div class="kpi-grid mt-4" aria-label="核心市场指标">
-      <div class="kpi"><div class="kpi-label">XAU/USD现货最新公开报价</div><div id="spotQuoteValue" class="kpi-value price-flash">4,604.40</div><div id="spotQuoteNote" class="kpi-note up-text">美元/盎司 · 源时间 8月23日 08:51 UTC</div></div>
-      <div class="kpi"><div class="kpi-label">周五日变动</div><div class="kpi-value up-text">+1.87%</div><div class="kpi-note">收盘接近30日高点</div></div>
-      <div class="kpi"><div class="kpi-label">10年期实际收益率</div><div class="kpi-value warn-text">2.40%</div><div class="kpi-note">8月21日 · 当日上行</div></div>
-      <div class="kpi"><div class="kpi-label">9月维持利率概率</div><div class="kpi-value signal-text">61%</div><div class="kpi-note">FedWatch · 8月22日更新</div></div>
-      <div class="kpi"><div class="kpi-label">全球黄金ETF流量</div><div class="kpi-value signal-text">+$3bn</div><div class="kpi-note">7月数据 · 滞后21天</div></div>
-      <div class="kpi"><div class="kpi-label">管理基金净多</div><div class="kpi-value warn-text">139,004</div><div class="kpi-note">CFTC · 截止8月18日</div></div>
+      <div class="kpi"><div class="kpi-label">XAU/USD现货最新公开报价</div><div id="spotQuoteValue" class="kpi-value price-flash">读取报告数据</div><div id="spotQuoteNote" class="kpi-note up-text">读取来源与源时间</div></div>
+      <div class="kpi"><div class="kpi-label">周五日变动</div><div id="dailyReturnValue" class="kpi-value up-text">读取报告数据</div><div id="dailyReturnNote" class="kpi-note">从OHLC计算</div></div>
+      <div class="kpi"><div class="kpi-label">10年期实际收益率</div><div id="realYieldKpiValue" class="kpi-value warn-text">读取报告数据</div><div id="realYieldKpiNote" class="kpi-note">读取连续序列状态</div></div>
+      <div class="kpi"><div class="kpi-label">政策路径概率</div><div id="fedWatchKpiValue" class="kpi-value signal-text">读取报告数据</div><div id="fedWatchKpiNote" class="kpi-note">读取辅助数据</div></div>
+      <div class="kpi"><div class="kpi-label">黄金ETF资金线索</div><div id="etfFlowKpiValue" class="kpi-value signal-text">读取报告数据</div><div id="etfFlowKpiNote" class="kpi-note">读取官方日度代理</div></div>
+      <div class="kpi"><div class="kpi-label">管理基金净多</div><div id="cftcNetLongKpiValue" class="kpi-value warn-text">读取报告数据</div><div id="cftcNetLongKpiNote" class="kpi-note">读取CFTC分项与OI</div></div>
     </div>
     <div id="quoteNotice" class="notice info mt-3"><b>本次自动化试跑：</b>正在读取 XAU/USD 现货报价审计信息。</div>
   </header>
@@ -119,7 +135,6 @@
         <div class="health-item" data-health-key="ohlc"><div class="health-label"><i class="health-dot"></i>30日OHLC</div><small>计算中</small></div>
         <div class="health-item" data-health-key="realYield"><div class="health-label"><i class="health-dot"></i>实际收益率</div><small>计算中</small></div>
         <div class="health-item" data-health-key="auxiliary"><div class="health-label"><i class="health-dot warn"></i>资金与仓位</div><small>计算中</small></div>
-        <div class="health-item" data-health-key="options"><div class="health-label"><i class="health-dot danger"></i>现货期权链</div><small>计算中</small></div>
       </div>
     </div>
     <div class="delta-pane">
@@ -133,6 +148,23 @@
     </div>
   </section>
 
+  <section class="surface mt-3 quality-overview" aria-label="研究质量与证据覆盖">
+    <div class="quality-score-pane">
+      <div class="eyebrow">Research confidence</div>
+      <div id="qualityConfidence" class="quality-score">计算中</div>
+      <div id="qualityConfidenceReason" class="quality-caption">正在读取数据缺口对结论的影响。</div>
+    </div>
+    <div class="quality-coverage-pane">
+      <div class="overview-head"><div><div class="eyebrow">35-module evidence map</div><div class="overview-title mt-1">模块证据覆盖度</div></div><span id="qualityCoverageText" class="tag tag-gold">计算中</span></div>
+      <div class="coverage-bar" aria-label="已核验、部分核验、缺失和不适用模块比例"><span id="coverageVerified" class="coverage-verified"></span><span id="coveragePartial" class="coverage-partial"></span><span id="coverageMissing" class="coverage-missing"></span><span id="coverageNotApplicable" class="coverage-na"></span></div>
+      <div class="coverage-legend"><div><b id="coverageVerifiedCount">0</b>已核验</div><div><b id="coveragePartialCount">0</b>部分核验</div><div><b id="coverageMissingCount">0</b>缺失</div><div><b id="coverageNotApplicableCount">0</b>不适用</div></div>
+    </div>
+    <div class="quality-check-pane">
+      <div class="overview-head"><div><div class="eyebrow">Quality gates</div><div class="overview-title mt-1">报告自检结果</div></div><span class="tag tag-warn">不替代审阅</span></div>
+      <div id="qualityCheckList" class="quality-check-list"><div class="quality-check"><span>正在读取</span><b class="check-warn">...</b></div></div>
+    </div>
+  </section>
+
   <nav class="mobile-lane-switcher" aria-label="手机端研究栏位">
     <button type="button" class="active" data-lane="0">左栏 · 结论</button>
     <button type="button" data-lane="1">中栏 · 分析</button>
@@ -142,16 +174,16 @@
   <div class="terminal-grid mt-3">
     <aside class="column sticky">
       <section class="surface">
-        <div class="panel-head"><div><div class="eyebrow">核心结论</div><h2 class="section-title mt-1"><span class="status-dot dot-warn"></span>Executive Summary</h2></div><span class="tag tag-warn">轻度看多</span></div>
+        <div class="panel-head"><div><div class="eyebrow">核心结论</div><h2 class="section-title mt-1"><span class="status-dot dot-warn"></span>Executive Summary</h2></div><span id="summaryRatingTag" class="tag tag-warn">读取报告数据</span></div>
         <div class="panel-body">
-          <div class="metric-label">当前市场状态</div><div class="summary-lead mt-1">上涨趋势中的加速阶段</div>
+          <div class="metric-label">当前市场状态</div><div id="summaryMarketState" class="summary-lead mt-1">读取报告数据</div>
           <div class="summary-list">
-            <div><b class="gold-text">第一驱动力：</b>弱就业与核心CPI低于预期，推动加息预期回落。</div>
-            <div><b class="signal-text">最大正向预期差：</b>偏鹰FOMC纪要发布日，现货反而上涨4.34%。</div>
-            <div><b class="danger-text">最大负向预期差：</b>实际收益率8月21日升至2.40%，没有同步确认。</div>
-            <div><b class="warn-text">交易动作：</b>等待4,500—4,525回踩确认，不追4,600上方长阳。</div>
+            <div><b class="gold-text">第一驱动力：</b><span id="summaryDriver">读取报告数据</span></div>
+            <div><b class="signal-text">最大正向预期差：</b><span id="summaryPositiveGap">读取报告数据</span></div>
+            <div><b class="danger-text">最大负向预期差：</b><span id="summaryNegativeGap">读取报告数据</span></div>
+            <div><b class="warn-text">交易动作：</b><span id="summaryAction">读取报告数据</span></div>
           </div>
-          <div class="notice mt-4"><b>市场已经知道：</b>央行配置、去美元化、地缘和财政风险。<br><b>市场还不知道：</b>8月上涨后是否出现新的现货边际买家。</div>
+          <div class="notice mt-4"><b>市场已经知道：</b><span id="summaryMarketKnown">读取报告数据</span><br><b>市场还不知道：</b><span id="summaryMarketUnknown">读取报告数据</span></div>
           <button class="fold-btn mt-4" type="button" data-fold="summary-fold" aria-expanded="false">深度推演：为什么不是强烈看多？<span class="arrow">▶</span></button>
           <div id="summary-fold" class="fold"><div class="fold-content">价格强度已经确认，但资金和利率确认不完整。基本面逻辑正确，不等于当前价位的交易执行正确。若实际收益率不下行、ETF没有继续流入，8月19日可能只是政策预期差和仓位重估形成的阶段性冲击。</div></div>
         </div>
@@ -161,10 +193,10 @@
         <div class="panel-body text-xs">
           <button class="fold-btn open" type="button" data-fold="failure-fold" aria-expanded="true"><span>四类失效条件</span><span class="arrow">▶</span></button>
           <div id="failure-fold" class="fold open"><div class="fold-content">
-            <div class="metric-row"><span class="metric-label">技术失效</span><b class="danger-text">收盘跌破4,300</b></div>
-            <div class="metric-row"><span class="metric-label">宏观失效</span><b>实际收益率持续上行</b></div>
-            <div class="metric-row"><span class="metric-label">资金失效</span><b>ETF连续流出</b></div>
-            <div class="metric-row"><span class="metric-label">评级调整</span><b>价格+宏观转逆风→中性</b></div>
+            <div class="metric-row"><span class="metric-label">技术失效</span><b id="failureTechnical" class="danger-text">读取报告数据</b></div>
+            <div class="metric-row"><span class="metric-label">宏观失效</span><b id="failureMacro">读取报告数据</b></div>
+            <div class="metric-row"><span class="metric-label">资金失效</span><b id="failureFlow">读取报告数据</b></div>
+            <div class="metric-row"><span class="metric-label">评级调整</span><b id="failureRating">读取报告数据</b></div>
           </div></div>
           <div class="side-fold"><button class="fold-btn" type="button" data-fold="failure-detail" aria-expanded="false">为什么这些条件会改变评级？<span class="arrow">▶</span></button><div id="failure-detail" class="fold"><div class="fold-content"><strong>技术：</strong>4,300下方意味着8月19日冲击未能守住，突破叙事转为失败。<br><strong>宏观：</strong>实际收益率上行会提高持有黄金的机会成本，若价格仍涨，反而需要更强的资金或风险溢价解释。<br><strong>资金：</strong>ETF流出叠加管理基金净多下降，会把价格回撤转化为负向反身性。单一条件只能下调置信度，不能机械判定趋势反转。</div></div></div>
           <div class="notice danger mt-3">若技术失效同时伴随实际收益率上行、ETF流出和多头去杠杆，则从中性进一步转为看空。</div>
@@ -173,9 +205,9 @@
       <section class="surface">
         <div class="panel-head"><div><div class="eyebrow">最终判断</div><h2 class="section-title mt-1">交易状态</h2></div></div>
         <div class="panel-body">
-          <div class="metric-row"><span class="metric-label">长期</span><b class="signal-text">结构性偏多</b></div>
-          <div class="metric-row"><span class="metric-label">1—3个月</span><b class="warn-text">轻度看多</b></div>
-          <div class="metric-row"><span class="metric-label">1—4周</span><b class="warn-text">高位震荡偏强</b></div>
+          <div class="metric-row"><span class="metric-label">长期</span><b id="horizonLong" class="signal-text">读取报告数据</b></div>
+          <div class="metric-row"><span class="metric-label">1—3个月</span><b id="horizonQuarter" class="warn-text">读取报告数据</b></div>
+          <div class="metric-row"><span class="metric-label">1—4周</span><b id="horizonMonth" class="warn-text">读取报告数据</b></div>
           <div class="side-fold"><button class="fold-btn" type="button" data-fold="horizon-fold" aria-expanded="false">三周期结论与价格路径<span class="arrow">▶</span></button><div id="horizon-fold" class="fold"><div class="fold-content"><strong>长期：</strong>央行配置与储备多元化提供结构性底盘，但不能直接转化为短线买入信号。<br><strong>1—3个月：</strong>若实际收益率不再上行且9月政策预期继续改善，4,635上方才有趋势延续条件。<br><strong>1—4周：</strong>基准路径是4,500—4,635高位震荡；回踩支持区后出现现货承接，比在压力区追涨更有风险收益优势。</div></div></div>
           <div class="notice mt-3"><b>一句话：</b>现在最值得交易的不是已经发生的上涨，而是回踩后是否仍有新的买家接力。</div>
         </div>
@@ -218,22 +250,13 @@
 
     <main class="column">
       <section id="price" class="surface">
-        <div class="panel-head"><div><div class="eyebrow">模块25 · 只显示XAU/USD现货</div><h2 class="section-title mt-1">30日价格结构与事件选择</h2><div class="section-note mt-1">真实日线OHLC · 支撑/压力范围 · 事件节点 · 红涨绿跌</div></div><div class="text-right"><div class="text-sm font-bold up-text">4,603.56</div><div class="section-note">30日累计 +11.45%</div></div></div>
+        <div class="panel-head"><div><div class="eyebrow">模块25 · 只显示XAU/USD现货</div><h2 class="section-title mt-1">30日价格结构与事件选择</h2><div class="section-note mt-1">真实日线OHLC · 支撑/压力范围 · 事件节点 · 红涨绿跌</div></div><div class="text-right"><div id="latestCloseMetric" class="text-sm font-bold up-text">读取报告数据</div><div id="priceWindowReturn" class="section-note">读取OHLC计算</div></div></div>
         <div class="panel-body"><div id="kline" class="chart" role="img" aria-label="XAU/USD现货近30个自然日（23个交易日）真实日线K线、均线、支持压力区和事件节点"></div>
           <div class="legend"><span><i style="background:#EF4444"></i>红涨</span><span><i style="background:#10B981"></i>绿跌</span><span><i style="background:#EF444455"></i>压力4,600—4,635</span><span><i style="background:#10B98155"></i>支持4,500—4,525</span><span><i style="background:#B6872A"></i>事件节点</span></div>
-          <div class="event-list" id="eventList">
-            <button class="event-btn active" type="button" data-event="0" data-date="07-29" aria-pressed="true"><strong>7月29日 FOMC</strong><small>次日+0.92%，3日-0.31%</small></button>
-            <button class="event-btn" type="button" data-event="1" data-date="08-07" aria-pressed="false"><strong>8月7日 就业</strong><small>非农-2.3万，日涨2.44%</small></button>
-            <button class="event-btn" type="button" data-event="2" data-date="08-12" aria-pressed="false"><strong>8月12日 CPI</strong><small>核心环比0.2%，日涨0.92%</small></button>
-            <button class="event-btn" type="button" data-event="3" data-date="08-19" aria-pressed="false"><strong>8月19日 纪要</strong><small>偏鹰纪要，现货涨4.34%</small></button>
-          </div>
+          <div class="event-list" id="eventList"><div class="quality-caption">正在从报告事件节点读取。</div></div>
            <div id="chartEventState" class="chart-event-state" aria-live="polite"><i></i><span>已定位：7月29日 FOMC，对应 K 线已高亮</span></div>
-           <div id="eventDetail" class="notice event-detail"><b>事件研究：</b>7月29日FOMC维持利率，三名委员倾向加息。事件后价格没有持续走弱，说明政策利空部分已定价，或被美元、风险溢价和其他资金因素抵消。</div>
-           <div id="eventStudy" class="event-study" aria-live="polite">
-             <div class="event-study-head"><span class="event-study-title">事件价格反应 · 7月29日 FOMC</span><span id="eventStudyStatus" class="event-status warn">计算中</span></div>
-             <div class="event-study-grid"><div class="event-study-cell"><small>事件前收盘</small><b>4,028.75</b></div><div class="event-study-cell"><small>事件日收盘</small><b class="up-text">4,066.16</b></div><div class="event-study-cell"><small>次日 / 第3交易日</small><b class="up-text">+0.92% / -0.31%</b></div><div class="event-study-cell"><small>当前相对事件日</small><b class="up-text">+13.23%</b></div></div>
-             <div class="event-study-note"><strong>复盘结论：</strong>事件日先上涨，三日后略低于事件日收盘，但当前价格已明显高于事件日，暂不能把短期回吐解释为逻辑失效。</div>
-           </div>
+           <div id="eventDetail" class="notice event-detail">正在从报告事件节点计算价格反应。</div>
+           <div id="eventStudy" class="event-study" aria-live="polite"><div class="quality-caption">正在计算事件窗口。</div></div>
            <button class="fold-btn mt-3" type="button" data-fold="event-fold" aria-expanded="false">深度推演：事件逻辑未失效，价格为什么会回到事件前？<span class="arrow">▶</span></button>
           <div id="event-fold" class="fold"><div class="fold-content">要区分“事件逻辑失效”和“价格反应弱于逻辑”。若事件仍然偏鹰、实际收益率没有下降，但价格回到事件前，可能意味着市场已经提前定价，或者新增资金不足。需要同时检查美元、实际收益率、ETF和仓位，不能用价格回归单独证明事件逻辑失效。</div></div>
         </div>
@@ -241,7 +264,8 @@
 
       <section id="drivers" class="surface">
         <div class="panel-head"><div><div class="eyebrow">模块6—17 · 驱动归因</div><h2 class="section-title mt-1">宏观因果链与实际收益率核心</h2><div class="section-note mt-1">当前判断不是“收益率高所以黄金跌”，而是拆解实际收益率、政策预期、美元和风险溢价的传导。</div></div><span class="tag tag-warn">宏观与价格存在背离</span></div>
-        <div class="panel-body"><div class="split-2"><div><div class="factor-row"><span>政策预期</span><div class="factor-track"><span style="width:74%;background:#0F8A68"></span></div><b class="signal-text">+3.7</b></div><div class="factor-row"><span>实际收益率</span><div class="factor-track"><span style="width:62%;background:#C47A14"></span></div><b class="warn-text">混合</b></div><div class="factor-row"><span>美元</span><div class="factor-track"><span style="width:55%;background:#0F8A68"></span></div><b class="signal-text">偏多</b></div><div class="factor-row"><span>就业/增长</span><div class="factor-track"><span style="width:68%;background:#0F8A68"></span></div><b class="signal-text">偏多</b></div><div class="factor-row"><span>通胀</span><div class="factor-track"><span style="width:53%;background:#C47A14"></span></div><b class="warn-text">混合</b></div><div class="factor-row"><span>地缘/风险溢价</span><div class="factor-track"><span style="width:58%;background:#B6872A"></span></div><b class="gold-text">中性偏多</b></div></div><div class="notice signal"><b>顺风传导：</b><br>非农大幅低于预期 + 核心CPI低于预期<br>→ 9月加息概率回落至39%<br>→ 黄金机会成本预期改善。<br><br><b>尚未确认：</b><br>8月21日实际收益率反而升至2.40%。</div></div>
+          <div class="panel-body"><div class="split-2"><div><div class="factor-row"><span>政策预期</span><div class="factor-track"><span style="width:74%;background:#0F8A68"></span></div><b class="signal-text">+3.7</b></div><div class="factor-row"><span>实际收益率</span><div class="factor-track"><span style="width:62%;background:#C47A14"></span></div><b class="warn-text">混合</b></div><div class="factor-row"><span>美元</span><div class="factor-track"><span style="width:55%;background:#0F8A68"></span></div><b class="signal-text">偏多</b></div><div class="factor-row"><span>就业/增长</span><div class="factor-track"><span style="width:68%;background:#0F8A68"></span></div><b class="signal-text">偏多</b></div><div class="factor-row"><span>通胀</span><div class="factor-track"><span style="width:53%;background:#C47A14"></span></div><b class="warn-text">混合</b></div><div class="factor-row"><span>地缘/风险溢价</span><div class="factor-track"><span style="width:58%;background:#B6872A"></span></div><b class="gold-text">中性偏多</b></div></div><div class="notice signal"><b>顺风传导：</b><br>非农大幅低于预期 + 核心CPI低于预期<br>→ 9月加息概率回落至39%<br>→ 黄金机会成本预期改善。<br><br><b>尚未确认：</b><br>8月21日实际收益率反而升至2.40%。</div></div>
+          <div id="realYieldAudit" class="real-yield-audit"><div class="overview-title">实际收益率核心锚</div><div class="quality-caption">正在读取同频数据状态。</div></div>
           <button class="fold-btn mt-3" type="button" data-fold="macro-fold" aria-expanded="false">深度推演：当前真正驱动与伴随变量<span class="arrow">▶</span></button>
           <div id="macro-fold" class="fold"><div class="fold-content">真正可观察的短线驱动是政策路径预期差和价格动量。央行购金属于长期底盘，ETF是重要的边际确认变量，地缘政治只提供风险溢价线索。实际收益率仍是核心约束，当前价格上涨更像暂时压过了该约束，而不是约束已经消失。</div></div>
         </div>
@@ -253,7 +277,7 @@
           <div id="scenario-bull" class="scenario-panel active mt-3"><div class="scenario-cells"><div class="scenario-cell"><h4>触发条件</h4><p>站稳4,635；实际收益率回到2.35%以下；ETF继续流入。</p></div><div class="scenario-cell"><h4>结果路径</h4><p>8月19日冲击转化为趋势延续，新边际买家接力。</p></div><div class="scenario-cell"><h4>交易动作</h4><p class="signal-text">等待突破后回踩，不追压力位。</p></div></div></div>
           <div id="scenario-base" class="scenario-panel mt-3"><div class="scenario-cells"><div class="scenario-cell"><h4>条件</h4><p>实际收益率2.35%—2.45%，价格在4,500—4,635震荡。</p></div><div class="scenario-cell"><h4>结果路径</h4><p>基本面偏多但执行节奏不顺，等待资金数据。</p></div><div class="scenario-cell"><h4>交易动作</h4><p class="warn-text">观察，不在区间中部追价。</p></div></div></div>
           <div id="scenario-bear" class="scenario-panel mt-3"><div class="scenario-cells"><div class="scenario-cell"><h4>破坏条件</h4><p>跌破4,300；实际收益率持续上行；ETF流出。</p></div><div class="scenario-cell"><h4>结果路径</h4><p>突破失败，负向反身性形成，风险溢价压缩。</p></div><div class="scenario-cell"><h4>交易动作</h4><p class="danger-text">评级下调，等待结构重建。</p></div></div></div>
-          <div class="notice mt-3"><b>风险收益：</b>当前价到4,635上行约0.68%，到4,509支持约下行2.05%，当前不适合追涨。</div>
+          <div id="riskRewardNotice" class="notice mt-3"><b>风险收益：</b>正在根据最新周五收盘计算。</div>
           <button class="fold-btn mt-3" type="button" data-fold="gap-fold" aria-expanded="false">深度推演：最大的隐藏预期差<span class="arrow">▶</span></button>
           <div id="gap-fold" class="fold"><div class="fold-content">最大的隐藏预期差不是“黄金长期是否看多”，而是“市场已经知道宏观数据偏弱后，是否还有新的边际买家”。若价格上涨但实际收益率、ETF和仓位不配合，交易逻辑可能只在叙事层成立，而没有完成价格执行。</div></div>
         </div>
@@ -286,9 +310,9 @@
     </main>
 
     <aside class="column sticky right-column">
-      <section class="surface"><div class="panel-head"><div><div class="eyebrow">模块26</div><h2 class="section-title mt-1">四维确认</h2></div><span class="tag tag-warn">未完全共振</span></div><div class="panel-body"><div class="four-grid"><div class="four-cell"><span class="signal-dot" style="background:#0F8A68"></span><strong>价格</strong><small>看多</small></div><div class="four-cell"><span class="signal-dot" style="background:#C47A14"></span><strong>资金</strong><small>滞后</small></div><div class="four-cell"><span class="signal-dot" style="background:#C47A14"></span><strong>仓位</strong><small>偏多</small></div><div class="four-cell"><span class="signal-dot" style="background:#C47A14"></span><strong>宏观</strong><small>混合</small></div></div><div class="metric-row mt-3"><span class="metric-label">价格</span><b class="up-text">30日+11.45%</b></div><div class="metric-row"><span class="metric-label">资金流</span><b>7月全球+$3bn</b></div><div class="metric-row"><span class="metric-label">仓位</span><b>净多139,004手</b></div><div class="metric-row"><span class="metric-label">宏观</span><b>实际收益率2.40%</b></div></div></section>
+      <section id="fourDimensionCard" class="surface"><div class="panel-head"><div><div class="eyebrow">模块26</div><h2 class="section-title mt-1">四维确认</h2></div><span id="fourDimensionTag" class="tag tag-warn">读取报告数据</span></div><div class="panel-body"><div class="four-grid"><div class="four-cell"><span class="signal-dot"></span><strong>价格</strong><small>读取报告数据</small></div><div class="four-cell"><span class="signal-dot"></span><strong>资金</strong><small>读取报告数据</small></div><div class="four-cell"><span class="signal-dot"></span><strong>仓位</strong><small>读取报告数据</small></div><div class="four-cell"><span class="signal-dot"></span><strong>宏观</strong><small>读取报告数据</small></div></div><div class="metric-row mt-3"><span class="metric-label">价格</span><b id="fourPriceMetric">读取报告数据</b></div><div class="metric-row"><span class="metric-label">资金流</span><b id="fourFlowMetric">读取报告数据</b></div><div class="metric-row"><span class="metric-label">仓位</span><b id="fourPositioningMetric">读取报告数据</b></div><div class="metric-row"><span class="metric-label">宏观</span><b id="fourMacroMetric">读取报告数据</b></div><div class="side-fold mt-2"><button class="fold-btn" type="button" data-fold="cftc-decomposition-fold" aria-expanded="false">展开：CFTC多空、空头回补、OI与价格机制<span class="arrow">▶</span></button><div id="cftc-decomposition-fold" class="fold"><div class="fold-content" id="cftcDecomposition">正在读取CFTC分项数据。</div></div></div></div></section>
       <section class="surface"><div class="panel-head"><div><div class="eyebrow">模块18、20、22</div><h2 class="section-title mt-1">叙事、反身性与风险溢价</h2></div><span class="tag tag-gold">扩散→共识</span></div><div class="panel-body"><div class="metric-label">当前最大故事：偏鹰环境下黄金仍然强势</div><div class="lifecycle"><div class="life-track"><div class="life-fill"></div><div class="life-pin"></div></div><div class="life-labels"><span>早期</span><span>扩散</span><span>共识</span><span>拥挤</span><span>失效</span></div></div><div class="metric-row"><span class="metric-label">反身性</span><b class="warn-text">正向初步形成</b></div><div class="metric-row"><span class="metric-label">新买家空间</span><b>ETF需二次确认</b></div><div class="metric-row"><span class="metric-label">压缩风险</span><b class="danger-text">风险消退时较高</b></div><div class="side-fold"><button class="fold-btn" type="button" data-fold="narrative-fold" aria-expanded="false">深度推演：故事如何推动价格，又如何失效？<span class="arrow">▶</span></button><div id="narrative-fold" class="fold"><div class="fold-content"><strong>价格传导：</strong>偏鹰纪要后价格仍上涨，说明市场交易的不是“立即加息”，而是条件式政策路径、增长走弱与风险溢价的重新组合。这个叙事在8月19日得到价格验证，但尚未得到8月ETF流量验证。<br><strong>正向反身性：</strong>价格上涨 → 市场关注度上升 → 资产配置需求增加 → 新买家出现 → 趋势延续。目前只确认了前两段，后两段仍需新的资金数据。<br><strong>风险溢价：</strong>黄金价格包含地缘、财政、去美元化和政策不确定性溢价。若事件风险缓和、实际收益率重新上行，风险溢价压缩可能让价格回到事件前水平，即使长期逻辑没有完全失效。<br><strong>失效证据：</strong>偏鹰政策被重新定价为更高实际收益率，同时价格跌破4,500并失守4,300，才是“故事开始失效”的组合证据。</div></div></div></div></section>
-      <section class="surface"><div class="panel-head"><div><div class="eyebrow">模块31 · 未来事件</div><h2 class="section-title mt-1">催化剂时间轴</h2><div class="section-note mt-1">这里只列事件，不把观察指标混入催化剂。</div></div><span id="countdown" class="countdown">计算中</span></div><div class="panel-body"><div class="event-stack"><div class="event-card"><div class="event-date">8月26日</div><div><strong>美国7月PCE</strong><small>下一项宏观事件</small></div></div><div class="event-card"><div class="event-date">8月28日</div><div><strong>美国就业基准修订</strong><small>历史就业数据修订事件</small></div></div><div class="event-card"><div class="event-date">9月16日</div><div><strong>美联储利率决议</strong><small>FOMC政策事件</small></div></div><div class="event-card"><div class="event-date">未来</div><div><strong>全球主要央行会议</strong><small>央行政策与储备配置相关事件</small></div></div></div><div class="notice mt-3">倒计时只提示下一个事件的时间，不代表事件方向或交易概率。</div></div></section>
+      <section class="surface"><div class="panel-head"><div><div class="eyebrow">模块31 · 未来事件</div><h2 class="section-title mt-1">催化剂时间轴</h2><div class="section-note mt-1">这里只列事件，不把观察指标混入催化剂。</div></div><span id="countdown" class="countdown">读取报告事件</span></div><div class="panel-body"><div id="catalystStack" class="event-stack"><div class="quality-caption">正在从报告事件列表读取。</div></div><div class="notice mt-3">倒计时只提示报告中的下一个事件时间，不代表事件方向或交易概率。</div></div></section>
       <section class="surface"><div class="panel-head"><div><div class="eyebrow">模块32 · 核心监控</div><h2 class="section-title mt-1">Top3监控与价格传导</h2></div><span class="tag tag-warn">需要确认</span></div><div class="panel-body"><div class="watch-list"><div class="watch-item"><div class="watch-copy"><b><span class="gold-text">1</span>　XAU/USD现货价格</b><small>4,500—4,525是突破后的承接区；跌破4,300才破坏8月趋势结构。</small></div><b class="signal-text">价格强</b></div><div class="watch-item"><div class="watch-copy"><b><span class="gold-text">2</span>　10年期实际收益率</b><small>实际收益率上行是机会成本逆风；回落才能把就业与通胀预期传导为更强的黄金逻辑。</small></div><b class="warn-text">混合</b></div><div class="watch-item"><div class="watch-copy"><b><span class="gold-text">3</span>　全球黄金ETF流量</b><small>7月净流入30亿美元，但8月尚未同频；它决定上涨是否出现新的边际买家。</small></div><b class="warn-text">待确认</b></div></div><div class="side-fold"><button class="fold-btn" type="button" data-fold="watch-fold" aria-expanded="false">点击展开：三个指标如何共同决定交易执行？<span class="arrow">▶</span></button><div id="watch-fold" class="fold"><div class="fold-content"><strong>强确认：</strong>现货站稳4,635 + 实际收益率回落 + ETF继续流入，才是价格、宏观、资金的同向闭环。<br><strong>弱确认：</strong>价格上涨但实际收益率上行、ETF无流入，说明行情可能由空头回补或短期叙事推动，追价的执行风险高。<br><strong>反转确认：</strong>现货跌破4,500并进一步跌破4,300，同时实际收益率上行和ETF流出，才考虑负向反身性正在形成。</div></div></div></div></section>
       <section class="surface"><div class="panel-head"><div><div class="eyebrow">模块12—15</div><h2 class="section-title mt-1">买家与数据缺口</h2></div><span class="tag tag-gold">辅助数据许可</span></div><div class="panel-body"><div class="metric-row"><span class="metric-label">长期买家</span><b>央行</b></div><div class="metric-row"><span class="metric-label">中期买家</span><b>全球黄金ETF</b></div><div class="metric-row"><span class="metric-label">杠杆仓位代理</span><b>黄金期货管理基金</b></div><div class="metric-row"><span class="metric-label">待确认</span><b>8月边际资金</b></div><div class="notice mt-3"><b>使用口径：</b>XAU/USD现货是本报告唯一的价格与技术结论基准；黄金期货的持仓、成交、期权隐含波动率和全球黄金ETF流量可以用于验证资金、仓位与边际买家，不能替代XAU/USD价格。</div><div class="side-fold"><button class="fold-btn" type="button" data-fold="buyer-fold" aria-expanded="false">点击展开：哪些辅助数据可以进入分析？<span class="arrow">▶</span></button><div id="buyer-fold" class="fold"><div class="fold-content"><strong>允许作为辅助证据：</strong>CFTC黄金期货持仓与未平仓量、黄金ETF持仓与申赎、黄金期权隐含波动率和偏度、黄金期货基差与成交量。<br><strong>不允许混用：</strong>不把黄金期货收盘价、期权行权价或ETF净值写成XAU/USD现货价格。任何“支撑、压力、涨跌幅、风险收益”仍只使用XAU/USD现货OHLC计算。</div></div></div></div></section>
       <section class="surface module-read-card column-tail">
@@ -307,11 +331,11 @@
   </div>
 
   <section id="audit" class="surface mt-3">
-    <div class="panel-head"><div><div class="eyebrow">数据审计</div><h2 class="section-title mt-1">数据账本、时效与来源</h2><div class="section-note mt-1">缺口不隐藏：数据可以滞后，但不把旧数据冒充最新数据。</div></div><span class="tag tag-signal">核心价格数据完整</span></div>
-    <div class="panel-body"><div class="audit-grid"><div class="table-wrap"><table class="data-table"><thead><tr><th>指标</th><th>数值</th><th>截止日期</th><th>来源 / 说明</th></tr></thead><tbody><tr><td>XAU/USD现货最新公开报价</td><td>4,604.399902</td><td>2026-08-23 00:58:42 UTC</td><td>Market Data插件 → gold-api.com；抓取约00:59 UTC；公开报价，非可执行价</td></tr><tr><td>XAU/USD现货历史OHLC</td><td>4,603.56 / 4,519.09 / 4,632.61 / 4,508.83</td><td>8月21日</td><td>Investing历史日线；周五收盘，0天交易日滞后；插件不提供现货历史OHLC</td></tr><tr><td>实际收益率</td><td>2.40%</td><td>8月21日</td><td>美国财政部官方；与价格同日</td></tr><tr><td>就业</td><td>非农-2.3万，失业率4.1%</td><td>7月</td><td>BLS，8月7日发布；滞后14天</td></tr><tr><td>CPI</td><td>同比3.4%，核心2.5%</td><td>7月</td><td>BLS，8月12日发布；滞后9天</td></tr><tr><td>PCE / GDP</td><td>PCE3.7%，GDP1.5%</td><td>6月 / 二季度</td><td>BEA，7月30日发布；滞后22天</td></tr><tr><td>FedWatch</td><td>维持61%，加息39%</td><td>8月22日</td><td>Investing基于CME；二级页面</td></tr><tr><td>ETF流量</td><td>全球7月+$3bn</td><td>7月31日</td><td>世界黄金协会，8月6日发布；滞后21天</td></tr><tr><td>CFTC仓位</td><td>管理基金净多139,004</td><td>8月18日</td><td>CFTC，8月21日更新；只作仓位代理</td></tr></tbody></table></div><div><div class="source-list"><div class="source-item"><span>本次XAU/USD报价</span><b>gold-api.com · 8月23日 00:58 UTC</b></div><div class="source-item"><span>美联储声明 / 纪要</span><b>7月29日 / 8月19日</b></div><div class="source-item"><span>美国财政部实际收益率</span><b>8月21日</b></div><div class="source-item"><span>BLS CPI / 就业</span><b>8月12日 / 8月7日</b></div><div class="source-item"><span>BEA PCE / GDP</span><b>7月30日</b></div><div class="source-item"><span>世界黄金协会ETF / 央行</span><b>8月6日 / 8月4日</b></div><div class="source-item"><span>CFTC黄金仓位</span><b>8月21日更新</b></div></div><div class="notice info mt-3"><b>未纳入核心结论：</b>实时ETF日度净流量、XAU/USD现货期权链、全球美元流动性最新数值。原因是公开数据口径不统一或无法同频核验。辅助品种报价只能解释风险偏好或资金线索，不能改写XAU/USD现货技术结论。</div></div></div></div>
+    <div class="panel-head"><div><div class="eyebrow">数据审计</div><h2 class="section-title mt-1">数据账本、时效与来源</h2><div class="section-note mt-1">缺口不隐藏：数据可以滞后，但不把旧数据冒充最新数据。</div></div><span id="auditStatusTag" class="tag tag-warn">读取报告数据</span></div>
+    <div class="panel-body"><div class="audit-grid"><div class="table-wrap"><table class="data-table"><thead><tr><th>指标</th><th>数值</th><th>截止日期</th><th>来源 / 说明</th></tr></thead><tbody id="auditTableBody"><tr><td colspan="4">正在从报告数据读取审计账本。</td></tr></tbody></table></div><div><div id="sourceList" class="source-list"><div class="source-item"><span>来源账本</span><b>正在读取报告数据</b></div></div><div id="auditBoundary" class="notice info mt-3">正在读取数据边界和缺口。</div></div></div></div>
   </section>
 
-  <section class="surface mt-3"><div class="panel-head"><div><div class="eyebrow">研究框架</div><h2 class="section-title mt-1">原始35模块索引</h2><div class="section-note mt-1">点击模块查看该模块在本报告中的结论，避免长文堆叠。</div></div><span class="tag tag-gold">事实 > 预期 > 仓位 > 流量 > 价格 > 叙事</span></div><div class="panel-body"><div id="moduleGrid" class="module-grid"></div><div id="moduleDetail" class="module-detail mt-3" aria-live="polite"><b>模块5 · 当前市场状态：</b>上行趋势中的加速阶段，但尚未完成资金与宏观共振确认。</div></div></section>
+  <section class="surface mt-3"><div class="panel-head"><div><div class="eyebrow">研究框架</div><h2 class="section-title mt-1">原始35模块索引</h2><div class="section-note mt-1">点击模块查看该模块在本报告中的结论，避免长文堆叠。</div></div><span class="tag tag-gold">事实 > 预期 > 仓位 > 流量 > 价格 > 叙事</span></div><div class="panel-body"><div id="moduleGrid" class="module-grid"></div><div id="moduleDetail" class="module-detail mt-3" aria-live="polite"><b>模块5 · 当前市场状态：</b>上行趋势中的加速阶段，但尚未完成资金与宏观共振确认。<div class="quality-caption"><b>证据层级：</b>Inference · 包含滞后数据、代理变量或推断，结论可以使用但必须降低权重。</div></div></div></section>
 
   <footer class="footer"><span><b>研究纪律：</b>不编造数据、不将推断写成事实、不用COMEX价格替代XAU/USD现货。</span><span>个人研究用途 · 不构成投资建议 · 数据以来源页面的最新修订为准</span></footer>
 </div>
@@ -323,8 +347,8 @@
 </div>
 <script id="reportDataPayload" type="application/json">{
   "meta": {
-    "reportDate": "2026-08-23",
-    "generatedAt": "2026-08-23T08:51:14.381Z",
+    "reportDate": "2026-08-24",
+    "generatedAt": "2026-08-23T22:02:19.946Z",
     "timezone": "Asia/Shanghai",
     "asset": "XAU/USD现货",
     "priceBasis": "XAU/USD现货",
@@ -332,9 +356,9 @@
   },
   "price": {
     "quote": {
-      "value": 4604.399902,
-      "capturedAt": "2026-08-23T08:51:13.000Z",
-      "retrievedAt": "2026-08-23T08:51:14.381Z",
+      "value": 4625,
+      "capturedAt": "2026-08-23T22:01:14.000Z",
+      "retrievedAt": "2026-08-23T22:01:32.778Z",
       "source": "gold-api.com",
       "sourceType": "公开报价，非可执行价",
       "currency": "USD",
@@ -342,13 +366,18 @@
     },
     "latestClose": 4603.56,
     "latestCloseDate": "2026-08-21",
-    "historySource": "Investing历史日线",
+    "historySource": "Investing历史日线（XAU/USD现货）",
     "historyAudit": {
-      "status": "stale-snapshot",
-      "retrievedAt": null,
-      "source": "Investing历史日线",
+      "status": "partial",
+      "retrievedAt": "2026-08-23T16:08:59.749Z",
+      "source": "Investing历史日线（XAU/USD现货）",
+      "sourceUrl": "https://www.investing.com/currencies/xau-usd-historical-data",
+      "sourceAsOf": "2026-08-21",
       "quality": "not-verified",
-      "note": "Market Data插件不提供XAU/USD历史OHLC；本次未使用其他价格序列替代"
+      "rowCount": 23,
+      "targetTradingDays": 30,
+      "originalRowCount": 23,
+      "note": "仅获得23根，缺少7根；不标记为完整30日窗口"
     },
     "ohlc": [
       {
@@ -519,12 +548,1020 @@
       "value": 2.4,
       "latestDate": "2026-08-21",
       "source": "美国财政部官方",
-      "sourceType": "实际收益率核心指标"
+      "sourceType": "实际收益率核心指标",
+      "series": [
+        {
+          "date": "2026-04-15",
+          "value": 1.9,
+          "publishedAt": "2026-04-15",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000009,
+          "change5d": -0.06000000000000005,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-16",
+          "value": 1.93,
+          "publishedAt": "2026-04-16",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.030000000000000027,
+          "change5d": -0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-17",
+          "value": 1.9,
+          "publishedAt": "2026-04-17",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.030000000000000027,
+          "change5d": -0.050000000000000044,
+          "direction": "down"
+        },
+        {
+          "date": "2026-04-20",
+          "value": 1.91,
+          "publishedAt": "2026-04-20",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000009,
+          "change5d": -0.010000000000000009,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-21",
+          "value": 1.92,
+          "publishedAt": "2026-04-21",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000009,
+          "change5d": 0.030000000000000027,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-22",
+          "value": 1.92,
+          "publishedAt": "2026-04-22",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.020000000000000018,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-04-23",
+          "value": 1.92,
+          "publishedAt": "2026-04-23",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": -0.010000000000000009,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-04-24",
+          "value": 1.89,
+          "publishedAt": "2026-04-24",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.030000000000000027,
+          "change5d": -0.010000000000000009,
+          "direction": "down"
+        },
+        {
+          "date": "2026-04-27",
+          "value": 1.91,
+          "publishedAt": "2026-04-27",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-28",
+          "value": 1.92,
+          "publishedAt": "2026-04-28",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000009,
+          "change5d": 0,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-29",
+          "value": 1.96,
+          "publishedAt": "2026-04-29",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-04-30",
+          "value": 1.94,
+          "publishedAt": "2026-04-30",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.020000000000000018,
+          "change5d": 0.020000000000000018,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-01",
+          "value": 1.91,
+          "publishedAt": "2026-05-01",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.030000000000000027,
+          "change5d": 0.020000000000000018,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-04",
+          "value": 1.95,
+          "publishedAt": "2026-05-04",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-05",
+          "value": 1.96,
+          "publishedAt": "2026-05-05",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000009,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-06",
+          "value": 1.94,
+          "publishedAt": "2026-05-06",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.020000000000000018,
+          "change5d": -0.020000000000000018,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-07",
+          "value": 1.96,
+          "publishedAt": "2026-05-07",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-08",
+          "value": 1.93,
+          "publishedAt": "2026-05-08",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.030000000000000027,
+          "change5d": 0.020000000000000018,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-11",
+          "value": 1.95,
+          "publishedAt": "2026-05-11",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-12",
+          "value": 1.99,
+          "publishedAt": "2026-05-12",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": 0.030000000000000027,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-13",
+          "value": 1.99,
+          "publishedAt": "2026-05-13",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.050000000000000044,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-05-14",
+          "value": 2,
+          "publishedAt": "2026-05-14",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000009,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-15",
+          "value": 2.1,
+          "publishedAt": "2026-05-15",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.10000000000000009,
+          "change5d": 0.17000000000000015,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-18",
+          "value": 2.13,
+          "publishedAt": "2026-05-18",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.029999999999999805,
+          "change5d": 0.17999999999999994,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-19",
+          "value": 2.18,
+          "publishedAt": "2026-05-19",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.050000000000000266,
+          "change5d": 0.19000000000000017,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-20",
+          "value": 2.13,
+          "publishedAt": "2026-05-20",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.050000000000000266,
+          "change5d": 0.1399999999999999,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-21",
+          "value": 2.18,
+          "publishedAt": "2026-05-21",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.050000000000000266,
+          "change5d": 0.18000000000000016,
+          "direction": "up"
+        },
+        {
+          "date": "2026-05-22",
+          "value": 2.16,
+          "publishedAt": "2026-05-22",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.020000000000000018,
+          "change5d": 0.06000000000000005,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-26",
+          "value": 2.1,
+          "publishedAt": "2026-05-26",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.06000000000000005,
+          "change5d": -0.029999999999999805,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-27",
+          "value": 2.09,
+          "publishedAt": "2026-05-27",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.010000000000000231,
+          "change5d": -0.0900000000000003,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-28",
+          "value": 2.06,
+          "publishedAt": "2026-05-28",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.029999999999999805,
+          "change5d": -0.06999999999999984,
+          "direction": "down"
+        },
+        {
+          "date": "2026-05-29",
+          "value": 2.07,
+          "publishedAt": "2026-05-29",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.009999999999999787,
+          "change5d": -0.11000000000000032,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-01",
+          "value": 2.07,
+          "publishedAt": "2026-06-01",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": -0.0900000000000003,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-06-02",
+          "value": 2.07,
+          "publishedAt": "2026-06-02",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": -0.03000000000000025,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-06-03",
+          "value": 2.11,
+          "publishedAt": "2026-06-03",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": 0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-04",
+          "value": 2.11,
+          "publishedAt": "2026-06-04",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.04999999999999982,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-06-05",
+          "value": 2.19,
+          "publishedAt": "2026-06-05",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.08000000000000007,
+          "change5d": 0.1200000000000001,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-08",
+          "value": 2.21,
+          "publishedAt": "2026-06-08",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0.14000000000000012,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-09",
+          "value": 2.2,
+          "publishedAt": "2026-06-09",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.009999999999999787,
+          "change5d": 0.13000000000000034,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-10",
+          "value": 2.21,
+          "publishedAt": "2026-06-10",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.009999999999999787,
+          "change5d": 0.10000000000000009,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-11",
+          "value": 2.16,
+          "publishedAt": "2026-06-11",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.04999999999999982,
+          "change5d": 0.050000000000000266,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-12",
+          "value": 2.17,
+          "publishedAt": "2026-06-12",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.009999999999999787,
+          "change5d": -0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-15",
+          "value": 2.15,
+          "publishedAt": "2026-06-15",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.020000000000000018,
+          "change5d": -0.06000000000000005,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-16",
+          "value": 2.14,
+          "publishedAt": "2026-06-16",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.009999999999999787,
+          "change5d": -0.06000000000000005,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-17",
+          "value": 2.23,
+          "publishedAt": "2026-06-17",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.08999999999999986,
+          "change5d": 0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-18",
+          "value": 2.21,
+          "publishedAt": "2026-06-18",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.020000000000000018,
+          "change5d": 0.04999999999999982,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-22",
+          "value": 2.28,
+          "publishedAt": "2026-06-22",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.06999999999999984,
+          "change5d": 0.10999999999999988,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-23",
+          "value": 2.29,
+          "publishedAt": "2026-06-23",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000231,
+          "change5d": 0.14000000000000012,
+          "direction": "up"
+        },
+        {
+          "date": "2026-06-24",
+          "value": 2.23,
+          "publishedAt": "2026-06-24",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.06000000000000005,
+          "change5d": 0.08999999999999986,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-25",
+          "value": 2.19,
+          "publishedAt": "2026-06-25",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.040000000000000036,
+          "change5d": -0.040000000000000036,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-26",
+          "value": 2.18,
+          "publishedAt": "2026-06-26",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.009999999999999787,
+          "change5d": -0.029999999999999805,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-29",
+          "value": 2.16,
+          "publishedAt": "2026-06-29",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.020000000000000018,
+          "change5d": -0.11999999999999966,
+          "direction": "down"
+        },
+        {
+          "date": "2026-06-30",
+          "value": 2.2,
+          "publishedAt": "2026-06-30",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": -0.08999999999999986,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-01",
+          "value": 2.25,
+          "publishedAt": "2026-07-01",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.04999999999999982,
+          "change5d": 0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-02",
+          "value": 2.26,
+          "publishedAt": "2026-07-02",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.009999999999999787,
+          "change5d": 0.06999999999999984,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-06",
+          "value": 2.24,
+          "publishedAt": "2026-07-06",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.019999999999999574,
+          "change5d": 0.06000000000000005,
+          "direction": "down"
+        },
+        {
+          "date": "2026-07-07",
+          "value": 2.3,
+          "publishedAt": "2026-07-07",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.05999999999999961,
+          "change5d": 0.13999999999999968,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-08",
+          "value": 2.31,
+          "publishedAt": "2026-07-08",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000231,
+          "change5d": 0.10999999999999988,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-09",
+          "value": 2.31,
+          "publishedAt": "2026-07-09",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.06000000000000005,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-07-10",
+          "value": 2.32,
+          "publishedAt": "2026-07-10",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.009999999999999787,
+          "change5d": 0.06000000000000005,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-13",
+          "value": 2.36,
+          "publishedAt": "2026-07-13",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": 0.11999999999999966,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-14",
+          "value": 2.33,
+          "publishedAt": "2026-07-14",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.029999999999999805,
+          "change5d": 0.03000000000000025,
+          "direction": "down"
+        },
+        {
+          "date": "2026-07-15",
+          "value": 2.32,
+          "publishedAt": "2026-07-15",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.010000000000000231,
+          "change5d": 0.009999999999999787,
+          "direction": "down"
+        },
+        {
+          "date": "2026-07-16",
+          "value": 2.35,
+          "publishedAt": "2026-07-16",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.03000000000000025,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-17",
+          "value": 2.31,
+          "publishedAt": "2026-07-17",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.040000000000000036,
+          "change5d": -0.009999999999999787,
+          "direction": "down"
+        },
+        {
+          "date": "2026-07-20",
+          "value": 2.35,
+          "publishedAt": "2026-07-20",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": -0.009999999999999787,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-21",
+          "value": 2.37,
+          "publishedAt": "2026-07-21",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-22",
+          "value": 2.39,
+          "publishedAt": "2026-07-22",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0.07000000000000028,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-23",
+          "value": 2.43,
+          "publishedAt": "2026-07-23",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.040000000000000036,
+          "change5d": 0.08000000000000007,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-24",
+          "value": 2.43,
+          "publishedAt": "2026-07-24",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.1200000000000001,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-07-27",
+          "value": 2.44,
+          "publishedAt": "2026-07-27",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.009999999999999787,
+          "change5d": 0.08999999999999986,
+          "direction": "up"
+        },
+        {
+          "date": "2026-07-28",
+          "value": 2.41,
+          "publishedAt": "2026-07-28",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.029999999999999805,
+          "change5d": 0.040000000000000036,
+          "direction": "down"
+        },
+        {
+          "date": "2026-07-29",
+          "value": 2.41,
+          "publishedAt": "2026-07-29",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.020000000000000018,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-07-30",
+          "value": 2.41,
+          "publishedAt": "2026-07-30",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": -0.020000000000000018,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-07-31",
+          "value": 2.47,
+          "publishedAt": "2026-07-31",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.06000000000000005,
+          "change5d": 0.040000000000000036,
+          "direction": "up"
+        },
+        {
+          "date": "2026-08-03",
+          "value": 2.43,
+          "publishedAt": "2026-08-03",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.040000000000000036,
+          "change5d": -0.009999999999999787,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-04",
+          "value": 2.4,
+          "publishedAt": "2026-08-04",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.03000000000000025,
+          "change5d": -0.010000000000000231,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-05",
+          "value": 2.41,
+          "publishedAt": "2026-08-05",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.010000000000000231,
+          "change5d": 0,
+          "direction": "up"
+        },
+        {
+          "date": "2026-08-06",
+          "value": 2.43,
+          "publishedAt": "2026-08-06",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0.020000000000000018,
+          "direction": "up"
+        },
+        {
+          "date": "2026-08-07",
+          "value": 2.4,
+          "publishedAt": "2026-08-07",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.03000000000000025,
+          "change5d": -0.07000000000000028,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-10",
+          "value": 2.43,
+          "publishedAt": "2026-08-10",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.03000000000000025,
+          "change5d": 0,
+          "direction": "up"
+        },
+        {
+          "date": "2026-08-11",
+          "value": 2.43,
+          "publishedAt": "2026-08-11",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": 0.03000000000000025,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-08-12",
+          "value": 2.42,
+          "publishedAt": "2026-08-12",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.010000000000000231,
+          "change5d": 0.009999999999999787,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-13",
+          "value": 2.39,
+          "publishedAt": "2026-08-13",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.029999999999999805,
+          "change5d": -0.040000000000000036,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-14",
+          "value": 2.41,
+          "publishedAt": "2026-08-14",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.020000000000000018,
+          "change5d": 0.010000000000000231,
+          "direction": "up"
+        },
+        {
+          "date": "2026-08-17",
+          "value": 2.44,
+          "publishedAt": "2026-08-17",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.029999999999999805,
+          "change5d": 0.009999999999999787,
+          "direction": "up"
+        },
+        {
+          "date": "2026-08-18",
+          "value": 2.41,
+          "publishedAt": "2026-08-18",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.029999999999999805,
+          "change5d": -0.020000000000000018,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-19",
+          "value": 2.35,
+          "publishedAt": "2026-08-19",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": -0.06000000000000005,
+          "change5d": -0.06999999999999984,
+          "direction": "down"
+        },
+        {
+          "date": "2026-08-20",
+          "value": 2.35,
+          "publishedAt": "2026-08-20",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0,
+          "change5d": -0.040000000000000036,
+          "direction": "flat"
+        },
+        {
+          "date": "2026-08-21",
+          "value": 2.4,
+          "publishedAt": "2026-08-21",
+          "retrievedAt": "2026-08-23T22:02:23.414Z",
+          "source": "美国财政部官方",
+          "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+          "change1d": 0.04999999999999982,
+          "change5d": -0.010000000000000231,
+          "direction": "up"
+        }
+      ],
+      "seriesAudit": {
+        "status": "refreshed",
+        "source": "美国财政部官方",
+        "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+        "retrievedAt": "2026-08-23T22:02:23.414Z",
+        "rowCount": 90,
+        "window": {
+          "start": "2026-04-15",
+          "end": "2026-08-21",
+          "change": 0.5,
+          "min": 1.89,
+          "max": 2.47
+        },
+        "note": "日度观测；publishedAt记录官方日线日期粒度，未伪造具体发布时间"
+      }
     }
   },
   "auxiliary": [
     {
       "name": "就业",
+      "value": "非农-2.3万，失业率4.1%",
       "latestDate": "2026-07-31",
       "publishedAt": "2026-08-07",
       "lagDays": 14,
@@ -533,6 +1570,7 @@
     },
     {
       "name": "CPI",
+      "value": "同比3.4%，核心2.5%",
       "latestDate": "2026-07-31",
       "publishedAt": "2026-08-12",
       "lagDays": 9,
@@ -541,6 +1579,7 @@
     },
     {
       "name": "PCE / GDP",
+      "value": "PCE3.7%，GDP1.5%",
       "latestDate": "2026-06-30 / 2026-Q2",
       "publishedAt": "2026-07-30",
       "lagDays": 22,
@@ -549,6 +1588,7 @@
     },
     {
       "name": "FedWatch",
+      "value": "维持61%，加息39%",
       "latestDate": "2026-08-22",
       "publishedAt": "2026-08-22",
       "lagDays": 1,
@@ -557,6 +1597,7 @@
     },
     {
       "name": "全球黄金ETF流量",
+      "value": "全球7月+$3bn",
       "latestDate": "2026-07-31",
       "publishedAt": "2026-08-06",
       "lagDays": 21,
@@ -565,20 +1606,12 @@
     },
     {
       "name": "CFTC仓位",
+      "value": "非商业净多222,189",
       "latestDate": "2026-08-18",
       "publishedAt": "2026-08-21",
       "lagDays": 2,
       "source": "CFTC",
       "status": "available"
-    },
-    {
-      "name": "现货期权链",
-      "latestDate": null,
-      "publishedAt": null,
-      "lagDays": null,
-      "source": null,
-      "status": "missing",
-      "gap": "公开口径无法同频核验，不纳入核心结论"
     }
   ],
   "events": [
@@ -611,6 +1644,1524 @@
       "source": "FOMC / XAUUSD现货日线"
     }
   ],
+  "etfFlows": {
+    "meta": {
+      "generatedAt": "2026-08-23T22:02:23.174Z",
+      "asOf": "2026-08-23",
+      "primaryPrice": "XAU/USD现货"
+    },
+    "scope": "GLD/IAU官方一级市场流量代理，不是全球ETF日度净流量",
+    "formula": "(sharesOutstanding_t - sharesOutstanding_t-1) * NAV_t",
+    "policy": {
+      "scope": "GLD/IAU官方一级市场流量代理，不是全球ETF日度净流量",
+      "formula": "(sharesOutstanding_t - sharesOutstanding_t-1) * NAV_t",
+      "requiredConfirmation": "至少3个连续观察日同方向，且无来源日期断档，才称为持续流入/流出"
+    },
+    "continuity": {
+      "status": "not-confirmed",
+      "sources": {
+        "GLD": "insufficient-history",
+        "IAU": "insufficient-history"
+      },
+      "note": "总体系不因任一单日变化而判定持续资金流"
+    },
+    "series": {
+      "GLD": {
+        "symbol": "GLD",
+        "status": "unavailable",
+        "source": "State Street SPDR Gold Shares官方",
+        "sourceUrl": "https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US.csv | https://www.spdrgoldshares.com/usa/historical-data/",
+        "retrievedAt": "2026-08-23T22:02:20.550Z",
+        "records": [],
+        "quality": "not-verified",
+        "error": "HTTP 404; CSV中未找到可同时解析的NAV和Shares Outstanding字段; 官方HTML未找到可同时解析的NAV和Shares Outstanding字段",
+        "note": "未把价格变化或ETF净值变化冒充资金流",
+        "continuity": {
+          "observedDays": 0,
+          "computedFlowDays": 0,
+          "gaps": [],
+          "longestSameDirectionRun": 0,
+          "requiredConsecutiveDays": 3,
+          "persistentDirection": false,
+          "status": "insufficient-history",
+          "interpretation": "不得把单日或混合方向变化称为持续流入/流出"
+        }
+      },
+      "IAU": {
+        "symbol": "IAU",
+        "status": "available",
+        "source": "BlackRock iShares Gold Trust官方",
+        "sourceUrl": "https://www.ishares.com/us/products/239561/ishares-gold-trust-fund/1467271812596.ajax?fileType=csv&fileName=IAU_holdings&dataType=fund&asOfDate=20260823",
+        "retrievedAt": "2026-08-23T22:02:20.595Z",
+        "records": [
+          {
+            "date": "2026-08-20",
+            "nav": 86.15,
+            "sharesOutstanding": 784200000,
+            "holdingsOunces": null,
+            "estimatedPrimaryFlowUsd": null,
+            "flowSign": "unknown"
+          }
+        ],
+        "quality": "medium",
+        "note": "官方份额/NAV数据；流量为一级市场创建/赎回代理",
+        "continuity": {
+          "observedDays": 1,
+          "computedFlowDays": 0,
+          "gaps": [],
+          "longestSameDirectionRun": 0,
+          "requiredConsecutiveDays": 3,
+          "persistentDirection": false,
+          "status": "insufficient-history",
+          "interpretation": "不得把单日或混合方向变化称为持续流入/流出"
+        }
+      }
+    },
+    "globalMonthly": {
+      "source": "World Gold Council",
+      "status": "separate-monthly-series",
+      "note": "不与GLD/IAU日度代理相加"
+    }
+  },
+  "positioning": {
+    "meta": {
+      "generatedAt": "2026-08-23T22:02:28.421Z",
+      "source": "CFTC官方",
+      "priceBasis": "XAU/USD现货",
+      "sourceUrl": "https://www.cftc.gov/files/dea/history/deacot2026.zip",
+      "retrievedAt": "2026-08-23T22:02:24.932Z"
+    },
+    "source": "CFTC官方",
+    "latestDate": "2026-08-18",
+    "publishedAt": null,
+    "status": "available",
+    "series": [
+      {
+        "date": "2026-01-06",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 274435,
+        "nonCommercialShort": 46803,
+        "netLong": 227632,
+        "openInterest": 488116,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": null,
+        "positioningShortChange": null,
+        "positioningNetLong": 227632,
+        "netLongChange": null,
+        "openInterestChange": null,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-01-13",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 296183,
+        "nonCommercialShort": 44945,
+        "netLong": 251238,
+        "openInterest": 527455,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 21748,
+        "positioningShortChange": -1858,
+        "positioningNetLong": 251238,
+        "netLongChange": 23606,
+        "openInterestChange": 39339,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-01-20",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 295772,
+        "nonCommercialShort": 51002,
+        "netLong": 244770,
+        "openInterest": 528004,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -411,
+        "positioningShortChange": 6057,
+        "positioningNetLong": 244770,
+        "netLongChange": -6468,
+        "openInterestChange": 549,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-01-27",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 252100,
+        "nonCommercialShort": 46704,
+        "netLong": 205396,
+        "openInterest": 488463,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -43672,
+        "positioningShortChange": -4298,
+        "positioningNetLong": 205396,
+        "netLongChange": -39374,
+        "openInterestChange": -39541,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-02-03",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 214508,
+        "nonCommercialShort": 48904,
+        "netLong": 165604,
+        "openInterest": 409694,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -37592,
+        "positioningShortChange": 2200,
+        "positioningNetLong": 165604,
+        "netLongChange": -39792,
+        "openInterestChange": -78769,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-02-10",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 212808,
+        "nonCommercialShort": 52796,
+        "netLong": 160012,
+        "openInterest": 404391,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -1700,
+        "positioningShortChange": 3892,
+        "positioningNetLong": 160012,
+        "netLongChange": -5592,
+        "openInterestChange": -5303,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-02-17",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 213432,
+        "nonCommercialShort": 53517,
+        "netLong": 159915,
+        "openInterest": 407078,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 624,
+        "positioningShortChange": 721,
+        "positioningNetLong": 159915,
+        "netLongChange": -97,
+        "openInterestChange": 2687,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-02-24",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 211649,
+        "nonCommercialShort": 52472,
+        "netLong": 159177,
+        "openInterest": 420182,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -1783,
+        "positioningShortChange": -1045,
+        "positioningNetLong": 159177,
+        "netLongChange": -738,
+        "openInterestChange": 13104,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-03-03",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 213752,
+        "nonCommercialShort": 53607,
+        "netLong": 160145,
+        "openInterest": 409789,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 2103,
+        "positioningShortChange": 1135,
+        "positioningNetLong": 160145,
+        "netLongChange": 968,
+        "openInterestChange": -10393,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-03-10",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 215445,
+        "nonCommercialShort": 52313,
+        "netLong": 163132,
+        "openInterest": 413956,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 1693,
+        "positioningShortChange": -1294,
+        "positioningNetLong": 163132,
+        "netLongChange": 2987,
+        "openInterestChange": 4167,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-03-17",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 215961,
+        "nonCommercialShort": 56092,
+        "netLong": 159869,
+        "openInterest": 411388,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 516,
+        "positioningShortChange": 3779,
+        "positioningNetLong": 159869,
+        "netLongChange": -3263,
+        "openInterestChange": -2568,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-03-24",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 220861,
+        "nonCommercialShort": 52534,
+        "netLong": 168327,
+        "openInterest": 403925,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 4900,
+        "positioningShortChange": -3558,
+        "positioningNetLong": 168327,
+        "netLongChange": 8458,
+        "openInterestChange": -7463,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-03-31",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 207602,
+        "nonCommercialShort": 44400,
+        "netLong": 163202,
+        "openInterest": 361409,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -13259,
+        "positioningShortChange": -8134,
+        "positioningNetLong": 163202,
+        "netLongChange": -5125,
+        "openInterestChange": -42516,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-04-07",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 205368,
+        "nonCommercialShort": 49063,
+        "netLong": 156305,
+        "openInterest": 354877,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -2234,
+        "positioningShortChange": 4663,
+        "positioningNetLong": 156305,
+        "netLongChange": -6897,
+        "openInterestChange": -6532,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-04-14",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 210009,
+        "nonCommercialShort": 47483,
+        "netLong": 162526,
+        "openInterest": 362274,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 4641,
+        "positioningShortChange": -1580,
+        "positioningNetLong": 162526,
+        "netLongChange": 6221,
+        "openInterestChange": 7397,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-04-21",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 212893,
+        "nonCommercialShort": 48887,
+        "netLong": 164006,
+        "openInterest": 365842,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 2884,
+        "positioningShortChange": 1404,
+        "positioningNetLong": 164006,
+        "netLongChange": 1480,
+        "openInterestChange": 3568,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-04-28",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 211818,
+        "nonCommercialShort": 52247,
+        "netLong": 159571,
+        "openInterest": 369530,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -1075,
+        "positioningShortChange": 3360,
+        "positioningNetLong": 159571,
+        "netLongChange": -4435,
+        "openInterestChange": 3688,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-05-05",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 211814,
+        "nonCommercialShort": 48511,
+        "netLong": 163303,
+        "openInterest": 367932,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -4,
+        "positioningShortChange": -3736,
+        "positioningNetLong": 163303,
+        "netLongChange": 3732,
+        "openInterestChange": -1598,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-05-12",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 219793,
+        "nonCommercialShort": 48171,
+        "netLong": 171622,
+        "openInterest": 376496,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 7979,
+        "positioningShortChange": -340,
+        "positioningNetLong": 171622,
+        "netLongChange": 8319,
+        "openInterestChange": 8564,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-05-19",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 211018,
+        "nonCommercialShort": 51185,
+        "netLong": 159833,
+        "openInterest": 379325,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -8775,
+        "positioningShortChange": 3014,
+        "positioningNetLong": 159833,
+        "netLongChange": -11789,
+        "openInterestChange": 2829,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-05-26",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 200704,
+        "nonCommercialShort": 46444,
+        "netLong": 154260,
+        "openInterest": 353489,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -10314,
+        "positioningShortChange": -4741,
+        "positioningNetLong": 154260,
+        "netLongChange": -5573,
+        "openInterestChange": -25836,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 206096,
+        "nonCommercialShort": 30076,
+        "netLong": 176020,
+        "openInterest": 326052,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 5392,
+        "positioningShortChange": -16368,
+        "positioningNetLong": 176020,
+        "netLongChange": 21760,
+        "openInterestChange": -27437,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 207984,
+        "nonCommercialShort": 34147,
+        "netLong": 173837,
+        "openInterest": 332709,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 1888,
+        "positioningShortChange": 4071,
+        "positioningNetLong": 173837,
+        "netLongChange": -2183,
+        "openInterestChange": 6657,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 211127,
+        "nonCommercialShort": 30907,
+        "netLong": 180220,
+        "openInterest": 339330,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 3143,
+        "positioningShortChange": -3240,
+        "positioningNetLong": 180220,
+        "netLongChange": 6383,
+        "openInterestChange": 6621,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 217028,
+        "nonCommercialShort": 35689,
+        "netLong": 181339,
+        "openInterest": 352167,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 5901,
+        "positioningShortChange": 4782,
+        "positioningNetLong": 181339,
+        "netLongChange": 1119,
+        "openInterestChange": 12837,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 229619,
+        "nonCommercialShort": 35600,
+        "netLong": 194019,
+        "openInterest": 369541,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 12591,
+        "positioningShortChange": -89,
+        "positioningNetLong": 194019,
+        "netLongChange": 12680,
+        "openInterestChange": 17374,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-07-07",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 233713,
+        "nonCommercialShort": 39467,
+        "netLong": 194246,
+        "openInterest": 371776,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 4094,
+        "positioningShortChange": 3867,
+        "positioningNetLong": 194246,
+        "netLongChange": 227,
+        "openInterestChange": 2235,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-07-14",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 227310,
+        "nonCommercialShort": 40628,
+        "netLong": 186682,
+        "openInterest": 383689,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -6403,
+        "positioningShortChange": 1161,
+        "positioningNetLong": 186682,
+        "netLongChange": -7564,
+        "openInterestChange": 11913,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-07-21",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 224785,
+        "nonCommercialShort": 40875,
+        "netLong": 183910,
+        "openInterest": 383368,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceReturn": null,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -2525,
+        "positioningShortChange": 247,
+        "positioningNetLong": 183910,
+        "netLongChange": -2772,
+        "openInterestChange": -321,
+        "mechanism": {
+          "label": "未解析",
+          "status": "unknown"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-07-28",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 219622,
+        "nonCommercialShort": 37552,
+        "netLong": 182070,
+        "openInterest": 384603,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceClose": 4028.75,
+        "priceReturn": -0.011749843621601141,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": -5163,
+        "positioningShortChange": -3323,
+        "positioningNetLong": 182070,
+        "netLongChange": -1840,
+        "openInterestChange": 1235,
+        "mechanism": {
+          "label": "新空头进入的可能性较高",
+          "status": "inference"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-08-04",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 227013,
+        "nonCommercialShort": 29379,
+        "netLong": 197634,
+        "openInterest": 371551,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceClose": 4077.65,
+        "priceReturn": 0.00597022289654503,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 7391,
+        "positioningShortChange": -8173,
+        "positioningNetLong": 197634,
+        "netLongChange": 15564,
+        "openInterestChange": -13052,
+        "mechanism": {
+          "label": "空头回补/平仓驱动的可能性较高",
+          "status": "inference"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-08-11",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 250936,
+        "nonCommercialShort": 32996,
+        "netLong": 217940,
+        "openInterest": 400309,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceClose": 4368.46,
+        "priceReturn": -0.004670810396996128,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 23923,
+        "positioningShortChange": 3617,
+        "positioningNetLong": 217940,
+        "netLongChange": 20306,
+        "openInterestChange": 28758,
+        "mechanism": {
+          "label": "新空头进入的可能性较高",
+          "status": "inference"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      },
+      {
+        "date": "2026-08-18",
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": 256902,
+        "nonCommercialShort": 34713,
+        "netLong": 222189,
+        "openInterest": 406260,
+        "market": "GOLD - COMMODITY EXCHANGE INC.",
+        "commodity": "GOLD",
+        "positioningGroup": "Non-Commercial（官方Legacy COT）",
+        "rawChange": {
+          "managedMoneyLong": null,
+          "managedMoneyShort": null,
+          "nonCommercialLong": null,
+          "nonCommercialShort": null,
+          "openInterest": null
+        },
+        "managedMoneyNetLong": null,
+        "priceClose": 4334.52,
+        "priceReturn": -0.01863331537169255,
+        "managedMoneyLongChange": null,
+        "managedMoneyShortChange": null,
+        "positioningLongChange": 5966,
+        "positioningShortChange": 1717,
+        "positioningNetLong": 222189,
+        "netLongChange": 4249,
+        "openInterestChange": 5951,
+        "mechanism": {
+          "label": "新空头进入的可能性较高",
+          "status": "inference"
+        },
+        "evidence": {
+          "price": "XAU/USD现货同频收盘",
+          "positioning": "CFTC官方周度报告",
+          "classification": "Inference，不等同于已证明的交易动机"
+        }
+      }
+    ],
+    "latest": {
+      "date": "2026-08-18",
+      "managedMoneyLong": null,
+      "managedMoneyShort": null,
+      "nonCommercialLong": 256902,
+      "nonCommercialShort": 34713,
+      "netLong": 222189,
+      "openInterest": 406260,
+      "market": "GOLD - COMMODITY EXCHANGE INC.",
+      "commodity": "GOLD",
+      "positioningGroup": "Non-Commercial（官方Legacy COT）",
+      "rawChange": {
+        "managedMoneyLong": null,
+        "managedMoneyShort": null,
+        "nonCommercialLong": null,
+        "nonCommercialShort": null,
+        "openInterest": null
+      },
+      "managedMoneyNetLong": null,
+      "priceClose": 4334.52,
+      "priceReturn": -0.01863331537169255,
+      "managedMoneyLongChange": null,
+      "managedMoneyShortChange": null,
+      "positioningLongChange": 5966,
+      "positioningShortChange": 1717,
+      "positioningNetLong": 222189,
+      "netLongChange": 4249,
+      "openInterestChange": 5951,
+      "mechanism": {
+        "label": "新空头进入的可能性较高",
+        "status": "inference"
+      },
+      "evidence": {
+        "price": "XAU/USD现货同频收盘",
+        "positioning": "CFTC官方周度报告",
+        "classification": "Inference，不等同于已证明的交易动机"
+      }
+    },
+    "audit": {
+      "positioningAsOf": "2026-08-18",
+      "publishedAt": null,
+      "retrievedAt": "2026-08-23T22:02:24.932Z",
+      "source": "CFTC官方 COT",
+      "sourceUrl": "https://www.cftc.gov/files/dea/history/deacot2026.zip",
+      "priceBasis": "XAU/USD现货",
+      "priceAuditStatus": "partial",
+      "priceRowsMatched": 33,
+      "priceSource": "Investing历史日线（XAU/USD现货）"
+    },
+    "decomposition": {
+      "latestMechanism": {
+        "label": "新空头进入的可能性较高",
+        "status": "inference"
+      },
+      "fields": [
+        "managedMoneyLong",
+        "managedMoneyShort",
+        "managedMoneyNetLong",
+        "openInterest",
+        "priceClose",
+        "priceReturn"
+      ],
+      "rule": "价格↑+OI↑=新多可能；价格↑+OI↓=空头回补/平仓可能；价格↓+OI↑=新空头可能；价格↓+OI↓=多头平仓/去杠杆可能"
+    },
+    "note": "CFTC仓位解释价格推动机制；不替代XAU/USD现货价格。Long/Short/OI缺失时不从净多单独反推。 同频价格匹配使用XAU/USD现货OHLC；价格来源审计状态为partial，不把未核验价格写成已核验。"
+  },
+  "analysis": {
+    "summary": {
+      "driver": "弱就业与核心CPI低于预期，推动加息预期回落。",
+      "positiveGap": "偏鹰FOMC纪要发布日，现货反而上涨4.34%。",
+      "negativeGap": "实际收益率8月19日回落后，8月21日反弹至2.40%，短线仍未形成单向确认。",
+      "action": "等待4,500—4,525回踩确认，不追4,600上方长阳。",
+      "marketKnown": "央行配置、去美元化、地缘和财政风险。",
+      "marketUnknown": "8月上涨后是否出现新的现货边际买家。"
+    },
+    "fourDimension": {
+      "price": "价格强",
+      "flow": "IAU官方单日观察已接入，但连续性不足；GLD官方端点待修复",
+      "positioning": "非商业净多偏高；多空分项、未平仓量与XAU/USD同频价格机制已拆解，但口径不是Managed Money，权重低于直接管理基金数据",
+      "macro": "实际收益率混合"
+    },
+    "horizons": {
+      "longTerm": "结构性偏多",
+      "oneToThreeMonths": "轻度看多",
+      "oneToFourWeeks": "高位震荡偏强"
+    },
+    "failureConditions": {
+      "technical": "收盘跌破4300",
+      "macro": "实际收益率连续上行",
+      "flow": "ETF连续流出",
+      "rating": "价格与宏观转逆风后下调评级"
+    },
+    "drivers": [
+      {
+        "name": "政策预期",
+        "score": 3.7,
+        "width": 74,
+        "state": "偏多",
+        "tone": "signal"
+      },
+      {
+        "name": "实际收益率",
+        "score": 0,
+        "width": 62,
+        "state": "混合",
+        "tone": "warn"
+      },
+      {
+        "name": "美元",
+        "score": 1.2,
+        "width": 55,
+        "state": "偏多",
+        "tone": "signal"
+      },
+      {
+        "name": "就业 / 增长",
+        "score": 2.1,
+        "width": 68,
+        "state": "偏多",
+        "tone": "signal"
+      },
+      {
+        "name": "通胀",
+        "score": 0,
+        "width": 53,
+        "state": "混合",
+        "tone": "warn"
+      },
+      {
+        "name": "地缘 / 风险溢价",
+        "score": 0.8,
+        "width": 58,
+        "state": "中性偏多",
+        "tone": "gold"
+      }
+    ],
+    "scenarios": {
+      "bull": {
+        "trigger": "站稳压力上沿；实际收益率回落；ETF流量代理满足持续性规则。",
+        "path": "价格突破后回踩承接，新的边际买家接力。",
+        "action": "等待突破确认，不追压力区长阳。"
+      },
+      "base": {
+        "trigger": "实际收益率维持当前区间；价格在支持与压力之间震荡；资金连续性未确认。",
+        "path": "基本面偏多但执行节奏不顺，等待资金数据。",
+        "action": "观察，不在区间中部追价。"
+      },
+      "bear": {
+        "trigger": "收盘跌破失效位；实际收益率持续上行；ETF连续性确认流出。",
+        "path": "突破失败，负向反身性形成，风险溢价压缩。",
+        "action": "评级下调，等待结构重建。"
+      }
+    },
+    "catalysts": [
+      {
+        "date": "2026-08-26T12:30:00Z",
+        "name": "美国7月PCE",
+        "type": "宏观数据事件",
+        "source": "BEA日程"
+      },
+      {
+        "date": "2026-08-28T12:30:00Z",
+        "name": "美国就业基准修订",
+        "type": "数据修订事件",
+        "source": "BLS日程"
+      },
+      {
+        "date": "2026-09-16T18:00:00Z",
+        "name": "美联储利率决议",
+        "type": "FOMC政策事件",
+        "source": "Federal Reserve日程"
+      },
+      {
+        "date": null,
+        "name": "全球主要央行会议",
+        "type": "央行政策事件",
+        "source": "待确认具体会议日程"
+      }
+    ],
+    "watch": [
+      {
+        "rank": 1,
+        "name": "XAU/USD现货价格",
+        "state": "价格强",
+        "detail": "4,500—4,525是突破后的承接区；跌破4,300才破坏8月趋势结构。"
+      },
+      {
+        "rank": 2,
+        "name": "10年期实际收益率",
+        "state": "混合",
+        "detail": "实际收益率上行是机会成本逆风；连续序列接入后再判断趋势变化。"
+      },
+      {
+        "rank": 3,
+        "name": "GLD/IAU日度流量代理",
+        "state": "待确认",
+        "detail": "IAU只有1个观察日、GLD本次404；必须达到3个连续观察日且无断档，才允许写成持续流入或流出。"
+      }
+    ]
+  },
   "current": {
     "rating": "轻度看多",
     "marketState": "上涨趋势中的加速阶段",
@@ -625,8 +3176,35 @@
     "invalidation": 4300,
     "bias": "不追涨，等待回踩承接或突破确认"
   },
+  "quality": {
+    "confidence": "中低",
+    "confidenceReason": "XAU/USD现货最新报价、周五收盘和实际收益率可用于当前状态判断；历史账本目前23根，其中22根已公开页面逐根核对，仍缺7根且有1根未完成同源核对；ETF流量存在发布滞后，因此技术结构、事件归因和边际买家判断必须降权。",
+    "coverage": {
+      "total": 35,
+      "verified": 6,
+      "partial": 25,
+      "missing": 3,
+      "notApplicable": 1
+    },
+    "coreRisks": [
+      "XAU/USD历史账本目前只有23根，缺少最近30根目标所需的7根；22根已公开页面逐根核对，2026-07-22尚未完成同源核对。",
+      "10年期实际收益率90个交易日连续序列已接入，但名义收益率/盈亏平衡通胀拆解仍缺失。",
+      "IAU官方只有1个观察日，GLD端点本次返回HTTP 404；ETF连续性不足，不能确认8月上涨期间的短线边际买家。",
+      "CFTC Socrata接口本次返回HTTP 403，已回退到CFTC官方年度压缩包；当前使用非商业多空与OI，仍不是Managed Money口径，且发布日期未由官方接口单独提供。"
+    ],
+    "selfChecks": {
+      "instrumentPurity": true,
+      "quoteFreshness": true,
+      "ohlcArithmetic": true,
+      "ohlcSourceVerified": false,
+      "eventDateAlignment": true,
+      "realYieldCore": true,
+      "causalAttribution": "partial",
+      "riskRewardQuantified": true
+    }
+  },
   "previous": {
-    "reportDate": "2026-08-23",
+    "reportDate": "2026-08-24",
     "rating": "轻度看多",
     "latestClose": 4603.56,
     "hadPublicQuote": true
@@ -638,31 +3216,28 @@
   if (!root) return;
   const q = (s) => root.querySelector(s);
   const qa = (s) => [...root.querySelectorAll(s)];
-  const reportData = {
-    generatedAt: '2026-08-23T00:59:00Z',
-    quote: {value: 4604.399902, source: 'gold-api.com', capturedAt: '2026-08-23T00:58:42Z'},
-    ohlc: {latestDate: '2026-08-21', source: 'Investing历史日线'},
-    realYield: {value: 2.40, latestDate: '2026-08-21', source: '美国财政部官方'},
-    auxiliary: {maxLagDays: 21, latestDate: '2026-08-18'},
-    options: {available: false},
-    current: {rating: '轻度看多', lastClose: 4603.56, pressureLow: 4600, pressureHigh: 4635, supportLow: 4500, invalidation: 4300},
-    previous: {rating: '轻度看多', lastClose: 4603.56, hadPublicQuote: false}
-  };
+  let reportData = {};
   const payloadElement = document.getElementById('reportDataPayload');
   if (payloadElement) {
     const payload = JSON.parse(payloadElement.textContent);
-    const fundItems = payload.auxiliary.filter(item => ['全球黄金ETF流量','CFTC仓位','FedWatch'].includes(item.name) && Number.isFinite(item.lagDays));
+    const auxiliaryRows = payload.auxiliary ?? [];
+    const lagValues = auxiliaryRows.map(item => Number(item.lagDays)).filter(Number.isFinite);
+    const realYieldPayload = payload.macro?.realYield10Y ?? {};
+    const current = payload.current ?? {};
     Object.assign(reportData, {
       generatedAt: payload.meta.generatedAt,
       quote: payload.price.quote ?? {},
-      ohlc: {latestDate: payload.price.latestCloseDate, source: payload.price.historySource},
-      realYield: {value: payload.macro.realYield10Y.value, latestDate: payload.macro.realYield10Y.latestDate, source: payload.macro.realYield10Y.source},
-      auxiliary: {maxLagDays: Math.max(...fundItems.map(item => item.lagDays)), latestDate: '2026-08-18'},
-      options: {available: payload.auxiliary.some(item => item.name === '现货期权链' && item.status !== 'missing')},
-      current: {rating: payload.current.rating, lastClose: payload.price.latestClose, pressureLow: payload.current.pressure[0], pressureHigh: payload.current.pressure[1], supportLow: payload.current.support[0], invalidation: payload.current.invalidation},
-      previous: {rating: payload.previous.rating, lastClose: payload.previous.latestClose, hadPublicQuote: payload.previous.hadPublicQuote},
+      ohlc: {latestDate: payload.price.latestCloseDate, source: payload.price.historySource, audit: payload.price.historyAudit},
+      realYield: {value: realYieldPayload.value, latestDate: realYieldPayload.latestDate, source: realYieldPayload.source, series: realYieldPayload.series ?? [], audit: realYieldPayload.seriesAudit ?? {}},
+      auxiliary: {rows:auxiliaryRows, maxLagDays: lagValues.length ? Math.max(...lagValues) : null, latestDate: auxiliaryRows.map(item => item.latestDate).filter(Boolean).sort().at(-1) ?? null},
+      quality: payload.quality ?? reportData.quality,
+      etfFlows: payload.etfFlows ?? {series:{},continuity:{status:'not-verified'}},
+      positioning: payload.positioning ?? {status:'partial',latest:{}},
+      analysis: payload.analysis ?? {},
+      current: {rating: current.rating, marketState:current.marketState, bias:current.bias, lastClose: payload.price.latestClose, pressureLow: current.pressure?.[0], pressureHigh: current.pressure?.[1], supportLow: current.support?.[0], supportHigh:current.support?.[1], invalidation: current.invalidation},
+      previous: {rating: payload.previous?.rating, lastClose: payload.previous?.latestClose, hadPublicQuote: payload.previous?.hadPublicQuote},
       priceRows: payload.price.ohlc.map(row => [row.date.slice(5), row.open, row.high, row.low, row.close]),
-      events: payload.events.map(event => ({coord: [event.date.slice(5), event.priceClose], name: event.name, label: event.label}))
+      events: (payload.events ?? []).map(event => ({...event, coord: [event.date.slice(5), event.priceClose], name: event.name, label: event.label}))
     });
   }
   const formatUtcLong = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? '暂无' : date.toISOString().replace('T',' ').replace('.000Z',' UTC'); };
@@ -685,21 +3260,12 @@
   const kData = rows.map(r => [r[1], r[4], r[3], r[2]]);
   const chart = window.echarts ? echarts.init(q('#kline')) : null;
   if (!chart) q('#kline').innerHTML = '<div class="notice info" style="margin-top:18px"><b>图表资源未加载：</b>当前网络未加载ECharts，下面的真实OHLC数据、支持压力区和事件研究仍可正常查看。</div>';
-  const eventPoints = reportData.events;
-  const eventArea = (event) => [[{yAxis:4600,itemStyle:{color:'rgba(239,68,68,.07)'}},{yAxis:4635}], [{yAxis:4500,itemStyle:{color:'rgba(16,185,129,.08)'}},{yAxis:4525}], [{xAxis:event.coord[0],itemStyle:{color:'rgba(182,135,42,.18)'}},{xAxis:event.coord[0]}]];
-  if (chart) chart.setOption({animation:false,grid:{left:50,right:18,top:22,bottom:42},tooltip:{trigger:'axis',axisPointer:{type:'cross'},backgroundColor:'#FFFDF8',borderColor:'#E3DAC8',textStyle:{color:'#1F2937',fontSize:11},formatter:(params)=>{const row=rows.find(r=>r[0]===params[0]?.axisValue);if(!row)return '';return row[0]+'<br>开盘 '+row[1].toLocaleString()+'　收盘 '+row[4].toLocaleString()+'<br>最高 '+row[2].toLocaleString()+'　最低 '+row[3].toLocaleString();}},xAxis:{type:'category',data:rows.map(r=>r[0]),axisLabel:{color:'#74716B',fontSize:9,interval:3},axisLine:{lineStyle:{color:'#E3DAC8'}}},yAxis:{scale:true,axisLabel:{color:'#74716B',fontSize:9},splitLine:{lineStyle:{color:'#EEE8DB'}}},dataZoom:[{type:'inside',start:0,end:100}],series:[{id:'candles',name:'XAU/USD现货K线',type:'candlestick',data:kData,itemStyle:{color:'#EF4444',color0:'#10B981',borderColor:'#EF4444',borderColor0:'#10B981'},markArea:{silent:true,data:eventArea(eventPoints[0])},markLine:{symbol:'none',label:{show:true,color:'#6E4C12',fontSize:9,backgroundColor:'#FFFDF8',padding:[2,3]},data:[{yAxis:4635,name:'压力4,635',lineStyle:{color:'#EF4444',type:'dashed'}},{yAxis:4525,name:'支持4,525',lineStyle:{color:'#10B981',type:'dashed'}},{yAxis:4300,name:'失效4,300',lineStyle:{color:'#C53D3D',type:'dotted'}}]},markPoint:{symbol:'pin',symbolSize:38,label:{color:'#fff',fontSize:8,formatter:'当前'},itemStyle:{color:'#B6872A'},data:[{coord:['08-21',4603.56]}]}},{name:'MA5',type:'line',data:ma(5),symbol:'none',lineStyle:{color:'#B6872A',width:1.5}},{name:'MA10',type:'line',data:ma(10),symbol:'none',lineStyle:{color:'#5982A3',width:1.2}},{name:'MA20',type:'line',data:ma(20),symbol:'none',lineStyle:{color:'#6E4C12',width:1.2}},{id:'events',name:'事件',type:'scatter',symbolSize:8,itemStyle:{color:'#B6872A'},data:eventPoints},{id:'event-selected',name:'选中事件',type:'scatter',symbol:'diamond',symbolSize:18,itemStyle:{color:'#C47A14',borderColor:'#FFFDF8',borderWidth:2},label:{show:true,formatter:'{b}',position:'top',color:'#6E4C12',fontSize:10,fontWeight:700},data:[eventPoints[0]]} ]});
-  const eventDetails = [
-    '<b>事件研究：</b>7月29日FOMC维持3.50%—3.75%，9比3通过，三名委员倾向加息。次日现货上涨0.92%，三日后较事件日下跌0.31%，政策利空没有形成持续单边下跌。',
-    '<b>事件研究：</b>7月非农减少2.3万人，市场预期增加约8.3万人。失业率4.1%，平均时薪同比3.2%。当天现货上涨2.44%，市场把它解读为增长放缓和加息必要性下降。',
-    '<b>事件研究：</b>7月核心CPI环比0.2%，低于约0.3%的预期，核心同比2.5%。当天上涨0.92%，随后次日下跌1.30%，说明CPI利多没有形成持续趋势确认。',
-    '<b>事件研究：</b>8月19日FOMC纪要发布，内容偏鹰，但现货单日上涨4.34%，8月19日至21日仍上涨1.79%。这可能是市场把“如果通胀不降才加息”理解为条件式路径，但日内因果仍不能完全证明。'
-  ];
-  const studyNotes = [
-    '三日后价格略低于事件日收盘，但当前价格已明显抬高；短期回吐更像第一轮定价消化，而非政策逻辑已经失效。',
-    '就业冲击当日形成上涨，次日和第三交易日的表现决定它是增长放缓交易还是单日空头回补；需要实际收益率继续配合才能延续。',
-    '核心CPI低于预期但次日回落，说明利多信息部分已被定价；如果价格回到事件前，应优先检查新买家是否缺席。',
-    '偏鹰纪要后现货仍上涨，构成信息与价格反应的正向预期差；但这次选择能否延续，仍需回踩承接和实际收益率验证。'
-  ];
+  const eventPoints = reportData.events ?? [];
+  const pressureLow = Number(reportData.current.pressureLow), pressureHigh = Number(reportData.current.pressureHigh), supportLow = Number(reportData.current.supportLow), supportHigh = Number(reportData.current.supportHigh), invalidation = Number(reportData.current.invalidation);
+  const eventArea = (event) => [[{yAxis:pressureLow,itemStyle:{color:'rgba(239,68,68,.07)'}},{yAxis:pressureHigh}], [{yAxis:supportLow,itemStyle:{color:'rgba(16,185,129,.08)'}},{yAxis:supportHigh}], ...(event ? [[{xAxis:event.coord[0],itemStyle:{color:'rgba(182,135,42,.18)'}},{xAxis:event.coord[0]}]] : [])];
+  const selectedEvent = eventPoints[0];
+  const lastRow = rows.at(-1);
+  if (chart) chart.setOption({animation:false,grid:{left:50,right:18,top:22,bottom:42},tooltip:{trigger:'axis',axisPointer:{type:'cross'},backgroundColor:'#FFFDF8',borderColor:'#E3DAC8',textStyle:{color:'#1F2937',fontSize:11},formatter:(params)=>{const row=rows.find(r=>r[0]===params[0]?.axisValue);if(!row)return '';return row[0]+'<br>开盘 '+row[1].toLocaleString()+'　收盘 '+row[4].toLocaleString()+'<br>最高 '+row[2].toLocaleString()+'　最低 '+row[3].toLocaleString();}},xAxis:{type:'category',data:rows.map(r=>r[0]),axisLabel:{color:'#74716B',fontSize:9,interval:3},axisLine:{lineStyle:{color:'#E3DAC8'}}},yAxis:{scale:true,axisLabel:{color:'#74716B',fontSize:9},splitLine:{lineStyle:{color:'#EEE8DB'}}},dataZoom:[{type:'inside',start:0,end:100}],series:[{id:'candles',name:'XAU/USD现货K线',type:'candlestick',data:kData,itemStyle:{color:'#EF4444',color0:'#10B981',borderColor:'#EF4444',borderColor0:'#10B981'},markArea:{silent:true,data:eventArea(selectedEvent)},markLine:{symbol:'none',label:{show:true,color:'#6E4C12',fontSize:9,backgroundColor:'#FFFDF8',padding:[2,3]},data:[{yAxis:pressureHigh,name:`压力${pressureHigh}`,lineStyle:{color:'#EF4444',type:'dashed'}},{yAxis:supportHigh,name:`支持${supportHigh}`,lineStyle:{color:'#10B981',type:'dashed'}},{yAxis:invalidation,name:`失效${invalidation}`,lineStyle:{color:'#C53D3D',type:'dotted'}}]},markPoint:{symbol:'pin',symbolSize:38,label:{color:'#fff',fontSize:8,formatter:'当前'},itemStyle:{color:'#B6872A'},data:lastRow ? [{coord:[lastRow[0],lastRow[4]]}] : []}},{name:'MA5',type:'line',data:ma(5),symbol:'none',lineStyle:{color:'#B6872A',width:1.5}},{name:'MA10',type:'line',data:ma(10),symbol:'none',lineStyle:{color:'#5982A3',width:1.2}},{name:'MA20',type:'line',data:ma(20),symbol:'none',lineStyle:{color:'#6E4C12',width:1.2}},{id:'events',name:'事件',type:'scatter',symbolSize:8,itemStyle:{color:'#B6872A'},data:eventPoints},{id:'event-selected',name:'选中事件',type:'scatter',symbol:'diamond',symbolSize:18,itemStyle:{color:'#C47A14',borderColor:'#FFFDF8',borderWidth:2},label:{show:true,formatter:'{b}',position:'top',color:'#6E4C12',fontSize:10,fontWeight:700},data:selectedEvent ? [selectedEvent] : []} ]});
   const fmtPct = (value) => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%` : '暂无';
   const pctFrom = (value, base) => Number.isFinite(value) && Number.isFinite(base) && base !== 0 ? (value / base - 1) * 100 : NaN;
   const formatUtc = (value) => new Date(value).toISOString().replace('T',' ').replace('.000Z',' UTC');
@@ -709,25 +3275,148 @@
     const quoteHours = Number.isNaN(quoted.getTime()) ? NaN : (generated - quoted) / 3600000;
     const quoteIsFuture = Number.isFinite(quoteHours) && quoteHours < 0;
     const ohlcComplete = rows.length >= 20 && rows.every(row => row.length === 5 && row[2] >= Math.max(row[1], row[4]) && row[3] <= Math.min(row[1], row[4]));
+    const ohlcSourceVerified = reportData.quality?.selfChecks?.ohlcSourceVerified === true;
     const checks = {
       quote: {ok: Number.isFinite(reportData.quote?.value) && Number.isFinite(quoteHours) && quoteHours >= 0 && quoteHours <= 24, text: !Number.isFinite(reportData.quote?.value) || !Number.isFinite(quoteHours) ? '缺口 · 沿用最近可得收盘价并降低时效置信度' : quoteIsFuture ? `模拟时点早于报价源 ${Math.abs(quoteHours).toFixed(1)}小时 · 源时间 ${formatUtc(reportData.quote.capturedAt)}` : `${quoteHours.toFixed(1)}小时滞后 · 源时间 ${formatUtc(reportData.quote.capturedAt)}`},
-      ohlc: {ok: ohlcComplete, text: `${ohlcComplete ? '完整' : '不完整'} · ${reportData.ohlc.latestDate}最近交易日`},
+      ohlc: {ok: ohlcComplete && ohlcSourceVerified, text: `${ohlcComplete ? '算术完整' : '不完整'} · ${ohlcSourceVerified ? '来源已核验' : '来源未完全核验'} · ${reportData.ohlc.latestDate}最近交易日`},
       realYield: {ok: reportData.realYield.latestDate === reportData.ohlc.latestDate, text: `${reportData.realYield.latestDate === reportData.ohlc.latestDate ? '与OHLC同日' : '日期不一致'} · ${reportData.realYield.source}`},
-      auxiliary: {ok: reportData.auxiliary.maxLagDays <= 21, text: `最新可得 ${reportData.auxiliary.latestDate} · 最大滞后${reportData.auxiliary.maxLagDays}天`},
-      options: {ok: reportData.options.available, text: reportData.options.available ? '已核验 · 纳入辅助判断' : '缺口 · 不纳入核心结论'}
+      auxiliary: {ok: reportData.auxiliary.maxLagDays <= 21, text: `最新可得 ${reportData.auxiliary.latestDate} · 最大滞后${reportData.auxiliary.maxLagDays}天`}
     };
     const score = Object.values(checks).filter(item => item.ok).length;
+    const denominator = Object.keys(checks).length;
     const scoreEl = q('#healthScore');
-    if (scoreEl) { scoreEl.textContent = `${score}/5 可直接使用`; scoreEl.className = `health-score ${score >= 4 ? '' : 'warn-text'}`; }
+    if (scoreEl) { scoreEl.textContent = `${score}/${denominator} 可直接使用`; scoreEl.className = `health-score ${score >= denominator ? '' : 'warn-text'}`; }
     qa('[data-health-key]').forEach(item => {
       const state = checks[item.dataset.healthKey];
       if (!state) return;
       const dot = item.querySelector('.health-dot');
       const small = item.querySelector('small');
-      if (dot) dot.className = `health-dot ${state.ok ? '' : (item.dataset.healthKey === 'options' ? 'danger' : 'warn')}`;
+      if (dot) dot.className = `health-dot ${state.ok ? '' : 'warn'}`;
       if (small) small.textContent = state.text;
     });
     return {checks, score};
+  };
+  const renderQualityOverview = () => {
+    const quality = reportData.quality ?? {};
+    const coverage = quality.coverage ?? {total: 35, verified: 0, partial: 35, missing: 0};
+    const total = Math.max(1, Number(coverage.total) || 35);
+    const setText = (id, value) => { const el = q('#'+id); if (el) el.textContent = value; };
+    setText('qualityConfidence', quality.confidence ?? '中低');
+    setText('qualityConfidenceReason', quality.confidenceReason ?? '数据缺口影响结论权重，详见审计账本。');
+    setText('qualityCoverageText', `${coverage.verified ?? 0}/${total}项直接核验`);
+    setText('coverageVerifiedCount', coverage.verified ?? 0);
+    setText('coveragePartialCount', coverage.partial ?? 0);
+    setText('coverageMissingCount', coverage.missing ?? 0);
+    setText('coverageNotApplicableCount', coverage.notApplicable ?? 0);
+    [['coverageVerified',coverage.verified],['coveragePartial',coverage.partial],['coverageMissing',coverage.missing],['coverageNotApplicable',coverage.notApplicable]].forEach(([id,count]) => { const el=q('#'+id); if (el) el.style.width=`${Math.max(0,Number(count)||0)/total*100}%`; });
+    const checks = quality.selfChecks ?? {};
+    const labels = [['instrumentPurity','现货口径纯度'],['quoteFreshness','报价24小时内'],['ohlcArithmetic','OHLC算术关系'],['ohlcSourceVerified','历史OHLC来源核验'],['eventDateAlignment','事件与K线日期'],['realYieldCore','实际收益率核心化'],['causalAttribution','因果归因完整度'],['riskRewardQuantified','风险收益量化']];
+    const list = q('#qualityCheckList');
+    if (list) list.innerHTML = labels.map(([key,label]) => { const value=checks[key]; const pass=value===true; const partial=value==='partial'; return `<div class="quality-check"><span>${label}</span><b class="${pass?'check-pass':partial?'check-warn':'check-fail'}">${pass?'通过':partial?'部分':'未通过'}</b></div>`; }).join('');
+    const risks = quality.coreRisks ?? [];
+    const riskEl = q('#qualityConfidenceReason');
+    if (riskEl && risks.length) riskEl.title = risks.join('\n');
+  };
+  const renderRealYieldAudit = () => {
+    const el = q('#realYieldAudit');
+    if (!el) return;
+    const ry = reportData.realYield;
+    const sameDay = ry.latestDate === reportData.ohlc.latestDate;
+    const series = ry.series ?? [];
+    const first = series[0], latest = series.at(-1);
+    const change = latest && first ? latest.value - first.value : null;
+    const fiveDay = latest?.change5d ?? null;
+    const direction = latest?.direction === 'up' ? '上行' : latest?.direction === 'down' ? '下行' : latest?.direction === 'flat' ? '横盘' : '未核验';
+    const windowText = Number.isFinite(change) ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}个百分点` : '未核验';
+    el.innerHTML = `<div class="overview-title">实际收益率核心锚 <span class="evidence-badge evidence-${sameDay?'fact':'partial'}">${sameDay?'Fact · 同日':'Partial · 日期错位'}</span></div><div class="real-yield-audit-grid"><div class="real-yield-audit-cell"><small>最新值</small><b class="warn-text">${Number.isFinite(ry.value)?ry.value.toFixed(2)+'%':'未核验'}</b></div><div class="real-yield-audit-cell"><small>观察日期 / 序列</small><b>${ry.latestDate ?? '暂无'} · ${series.length ? series.length+'日' : '单点'}</b></div><div class="real-yield-audit-cell"><small>窗口变化 / 方向</small><b class="warn-text">${windowText} · ${direction}</b></div></div><div class="quality-caption">来源：${ry.source ?? '未注明'}。${series.length ? `连续序列已接入；5个观测日变化为${Number.isFinite(fiveDay) ? (fiveDay >= 0 ? '+' : '') + fiveDay.toFixed(2) + '个百分点' : '未核验'}。` : '当前只有单点实际收益率，无法做同窗口变化分析。'} 实际收益率是核心约束，不把名义收益率单独当作黄金方向结论。</div>`;
+  };
+  const renderRiskReward = () => {
+    const el = q('#riskRewardNotice');
+    if (!el) return;
+    const p = Number(reportData.current.lastClose), bull = Number(reportData.current.pressureHigh), support = Number(reportData.current.supportLow), bear = Number(reportData.current.invalidation);
+    if (![p,bull,support,bear].every(Number.isFinite) || p === 0) return;
+    const up = (bull / p - 1) * 100;
+    const down = (p / support - 1) * 100;
+    const invalidation = (p / bear - 1) * 100;
+    el.innerHTML = `<b>风险收益（Calculation）：</b>周五收盘 ${p.toLocaleString()}；到压力上沿 ${bull.toLocaleString()} 上行 ${up.toFixed(2)}%，到支持下沿 ${support.toLocaleString()} 回撤 ${down.toFixed(2)}%，深层失效位 ${bear.toLocaleString()} 对应回撤 ${invalidation.toFixed(2)}%。上行空间小于支持区回撤，不适合追涨。`;
+  };
+  const renderDynamicSummary = () => {
+    const analysis = reportData.analysis ?? {};
+    const summary = analysis.summary ?? {};
+    const set = (id, value) => { const el=q('#'+id); if (el && value !== undefined && value !== null) el.textContent = value; };
+    set('currentRating', reportData.current.rating ?? '未核验');
+    set('currentMarketState', reportData.current.marketState ?? '未核验');
+    set('currentConfidence', reportData.quality?.confidence ? `${reportData.quality.confidence} · ${reportData.current.bias ?? '读取交易偏向'}` : '读取报告数据');
+    set('summaryRatingTag', reportData.current.rating ?? '未核验');
+    set('summaryMarketState', reportData.current.marketState ?? '未核验');
+    set('summaryDriver', summary.driver); set('summaryPositiveGap', summary.positiveGap); set('summaryNegativeGap', summary.negativeGap); set('summaryAction', summary.action); set('summaryMarketKnown', summary.marketKnown); set('summaryMarketUnknown', summary.marketUnknown);
+    const rows = reportData.priceRows ?? [];
+    const latest = rows.at(-1), previous = rows.at(-2), first = rows[0];
+    const fmtPrice = value => Number.isFinite(value) ? value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '暂无';
+    const fmtPctLocal = (value) => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%` : '暂无';
+    set('latestCloseMetric', fmtPrice(reportData.current.lastClose));
+    set('priceWindowReturn', `30日累计 ${fmtPctLocal(pctFrom(reportData.current.lastClose, first?.[4]))}`);
+    set('dailyReturnValue', fmtPctLocal(pctFrom(latest?.[4], previous?.[4])));
+    set('dailyReturnNote', latest ? `${latest[0]}收盘 · 近30日高点${latest[4] >= Math.max(...rows.map(row => row[2])) ? '附近' : '下方'}` : '暂无');
+    set('realYieldKpiValue', Number.isFinite(reportData.realYield.value) ? `${reportData.realYield.value.toFixed(2)}%` : '暂无');
+    set('realYieldKpiNote', `${reportData.realYield.latestDate ?? '日期未知'} · ${reportData.realYield.series?.length ? '连续序列已接入' : '当前单点，序列待接入'}`);
+    const auxiliaryRows = reportData.auxiliary?.rows ?? [];
+    const etfAux = auxiliaryRows.find(item => item.name === '全球黄金ETF流量');
+    const fedAux = auxiliaryRows.find(item => item.name === 'FedWatch');
+    const cftcAux = auxiliaryRows.find(item => item.name === 'CFTC仓位');
+    const etfSeries = reportData.etfFlows?.series ?? {};
+    const gldRows = etfSeries.GLD?.records ?? [], iauRows = etfSeries.IAU?.records ?? [];
+    const lastFlow = [...gldRows,...iauRows].filter(row => Number.isFinite(row.estimatedPrimaryFlowUsd)).at(-1);
+    const continuity = [etfSeries.GLD?.continuity,etfSeries.IAU?.continuity].filter(Boolean);
+    const continuityLabel = continuity.some(item => item.status === 'continuous-signal') ? '持续性已满足3日规则' : continuity.length ? '单日/混合，禁止判定持续' : '官方日度代理待核验';
+    set('etfFlowKpiValue', lastFlow ? `${lastFlow.estimatedPrimaryFlowUsd >= 0 ? '+' : ''}${(lastFlow.estimatedPrimaryFlowUsd / 1e6).toFixed(1)}m` : etfAux?.value ?? '暂无');
+    set('etfFlowKpiNote', lastFlow ? `GLD/IAU一级市场代理 · ${lastFlow.date} · ${continuityLabel}` : `${etfAux?.latestDate ?? '全球月度数据'} · ${continuityLabel}`);
+    set('fedWatchKpiValue', fedAux?.value ?? '暂无');
+    set('fedWatchKpiNote', fedAux ? `${fedAux.latestDate ?? '日期未知'} · ${fedAux.source ?? '来源未注明'}` : '报告未提供政策路径概率');
+    const cftcNet = reportData.positioning?.latest?.managedMoneyNetLong ?? reportData.positioning?.latest?.netLong;
+    set('cftcNetLongKpiValue', Number.isFinite(cftcNet) ? cftcNet.toLocaleString() : cftcAux?.value ?? '暂无');
+    set('cftcNetLongKpiNote', `${reportData.positioning?.latestDate ?? cftcAux?.latestDate ?? '日期未知'} · 多空分项/OI${reportData.positioning?.series?.length && Number.isFinite(reportData.positioning?.latest?.openInterest) ? '已拆解' : '待拆解'}`);
+    set('failureTechnical', Number.isFinite(reportData.current.invalidation) ? `收盘跌破${fmtPrice(reportData.current.invalidation)}` : '读取报告数据');
+    set('failureMacro', '实际收益率连续上行');
+    set('failureFlow', continuity.some(item => item.status === 'continuous-signal') ? 'ETF持续流出' : 'ETF连续性未确认');
+    set('failureRating', '价格与宏观转逆风 → 下调评级');
+    set('horizonLong', reportData.analysis?.horizons?.longTerm ?? '结构性方向待核验');
+    set('horizonQuarter', reportData.analysis?.horizons?.oneToThreeMonths ?? reportData.current.rating ?? '待核验');
+    set('horizonMonth', reportData.analysis?.horizons?.oneToFourWeeks ?? reportData.current.marketState ?? '待核验');
+    const four = analysis.fourDimension ?? {};
+    const fourCard = q('#fourDimensionCard');
+    if (fourCard) {
+      const cells = qa('.four-cell');
+      [[four.price,'价格'],[four.flow,'资金'],[four.positioning,'仓位'],[four.macro,'宏观']].forEach(([state,label],index) => { if (!cells[index]) return; cells[index].querySelector('strong').textContent=label; cells[index].querySelector('small').textContent=state ?? '未核验'; });
+      const signalColors = {看多:'#0F8A68',偏多:'#0F8A68',强势:'#0F8A68',混合:'#C47A14',滞后:'#C47A14',待确认:'#C47A14',偏空:'#C53D3D',看空:'#C53D3D'};
+      cells.forEach((cell,index) => { const state = [[four.price,'价格'],[four.flow,'资金'],[four.positioning,'仓位'],[four.macro,'宏观']][index]?.[0] ?? ''; const dot=cell.querySelector('.signal-dot'); if (dot) dot.style.background=signalColors[state] ?? '#B6872A'; });
+      const metricRows = fourCard.querySelectorAll('.metric-row');
+      if (metricRows[0]) metricRows[0].querySelector('b').textContent=`${fmtPctLocal(pctFrom(reportData.current.lastClose, first?.[4]))}`;
+      if (metricRows[1]) metricRows[1].querySelector('b').textContent=lastFlow ? `${lastFlow.estimatedPrimaryFlowUsd >= 0 ? '+' : ''}${(lastFlow.estimatedPrimaryFlowUsd / 1e6).toFixed(1)}m · ${continuityLabel}` : etfAux?.value ?? '待确认';
+      if (metricRows[2]) metricRows[2].querySelector('b').textContent=Number.isFinite(cftcNet) ? `净多${cftcNet.toLocaleString()}` : '待拆解';
+      if (metricRows[3]) metricRows[3].querySelector('b').textContent=Number.isFinite(reportData.realYield.value) ? `实际收益率${reportData.realYield.value.toFixed(2)}%` : '待核验';
+      const allStates = [four.price,four.flow,four.positioning,four.macro].filter(Boolean);
+      const tag = q('#fourDimensionTag');
+      if (tag) { const confirmed = allStates.length === 4 && allStates.every(state => /看多|偏多|强势/.test(state)); tag.textContent = confirmed ? '四维共振' : '未完全共振'; tag.className = `tag ${confirmed ? 'tag-signal' : 'tag-warn'}`; }
+      const cftc = reportData.positioning ?? {}, latestPosition = cftc.latest ?? {}, previousPosition = cftc.series?.at(-2) ?? {};
+      const fmtInt = value => Number.isFinite(Number(value)) ? Number(value).toLocaleString() : '未核验';
+      const priceReturn = Number(latestPosition.priceReturn) * 100;
+      const priceText = Number.isFinite(priceReturn) ? `${priceReturn >= 0 ? '+' : ''}${priceReturn.toFixed(2)}%` : '未核验';
+      const mechanism = latestPosition.mechanism?.label ?? '未完成价格机制分类';
+      const cftcEl = q('#cftcDecomposition');
+      if (cftcEl) cftcEl.innerHTML = `<div class="metric-row"><span class="metric-label">多头 / 空头</span><b>${fmtInt(latestPosition.managedMoneyLong ?? latestPosition.nonCommercialLong)} / ${fmtInt(latestPosition.managedMoneyShort ?? latestPosition.nonCommercialShort)}</b></div><div class="metric-row"><span class="metric-label">净多 / 未平仓量</span><b>${fmtInt(latestPosition.managedMoneyNetLong ?? latestPosition.netLong)} / ${fmtInt(latestPosition.openInterest)}</b></div><div class="metric-row"><span class="metric-label">相对前周变化</span><b>多 ${fmtInt(latestPosition.positioningLongChange ?? latestPosition.nonCommercialLongChange)} · 空 ${fmtInt(latestPosition.positioningShortChange ?? latestPosition.nonCommercialShortChange)} · OI ${fmtInt(latestPosition.openInterestChange)}</b></div><div class="metric-row"><span class="metric-label">价格同窗变化</span><b>${priceText} · ${mechanism}</b></div><div class="quality-caption">数据截止 ${latestPosition.date ?? cftc.latestDate ?? '未核验'}；${cftc.audit?.source ?? cftc.source ?? 'CFTC来源未注明'}。${previousPosition.date ? '价格、仓位和OI为同频观察，不把推断写成已证明的交易动机。' : '仅有单一观测时，不把净多单独解释为价格推动。'}</div>`;
+    }
+    const watch = analysis.watch ?? [];
+    qa('.watch-item').slice(0,watch.length).forEach((item,index) => { const entry=watch[index]; const copy=item.querySelector('.watch-copy'); if (!copy) return; copy.querySelector('b').innerHTML=`<span class="gold-text">${entry.rank}</span>　${entry.name}`; copy.querySelector('small').textContent=entry.detail; const state=item.querySelector(':scope > b'); if (state) state.textContent=entry.state; });
+    const driverHost = q('.factor-row')?.parentElement;
+    const drivers = analysis.drivers ?? [];
+    if (driverHost) driverHost.innerHTML = drivers.length ? drivers.map(item => `<div class="factor-row"><span>${item.name}</span><div class="factor-track"><span style="width:${Math.max(0,Math.min(100,Number(item.width)||0))}%;background:${item.tone === 'signal' ? '#0F8A68' : item.tone === 'gold' ? '#B6872A' : '#C47A14'}"></span></div><b class="${item.tone === 'signal' ? 'signal-text' : item.tone === 'gold' ? 'gold-text' : 'warn-text'}">${item.state ?? '未核验'}</b></div>`).join('') : '<div class="quality-caption">报告未提供可核验的驱动因子分解。</div>';
+    const scenarios = analysis.scenarios ?? {};
+    [['bull','看多'],['base','基准'],['bear','看空']].forEach(([key,label]) => {
+      const panel = q('#scenario-'+key), scenario = scenarios[key];
+      if (!panel || !scenario) return;
+      panel.innerHTML = `<div class="scenario-cells"><div class="scenario-cell"><h4>触发条件</h4><p>${scenario.trigger ?? '未核验'}</p></div><div class="scenario-cell"><h4>结果路径</h4><p>${scenario.path ?? '未核验'}</p></div><div class="scenario-cell"><h4>交易动作</h4><p class="${key === 'bull' ? 'signal-text' : key === 'bear' ? 'danger-text' : 'warn-text'}">${scenario.action ?? '未核验'}</p></div></div>`;
+    });
   };
   const renderReportDelta = () => {
     const priceDelta = reportData.current.lastClose - reportData.previous.lastClose;
@@ -742,28 +3431,47 @@
   };
   const renderEventStudy = (index) => {
     const event = eventPoints[index];
+    if (!event) return;
     const eventIndex = rows.findIndex(row => row[0] === event.coord[0]);
     const eventRow = rows[eventIndex];
+    if (!eventRow) {
+      q('#eventStudy').innerHTML = `<div class="notice warn"><b>事件日期未匹配OHLC：</b>${event.label} · ${event.date ?? event.coord[0]}。事件保留，但不计算窗口收益。</div>`;
+      return;
+    }
     const prevRow = rows[eventIndex - 1];
     const nextRow = rows[eventIndex + 1];
     const thirdRow = rows[eventIndex + 3];
+    const fifthRow = rows[eventIndex + 5];
     const latestRow = rows[rows.length - 1];
     const dayMove = pctFrom(eventRow[4], prevRow?.[4]);
     const nextMove = pctFrom(nextRow?.[4], eventRow[4]);
     const thirdMove = pctFrom(thirdRow?.[4], eventRow[4]);
+    const fifthMove = pctFrom(fifthRow?.[4], eventRow[4]);
     const currentMove = pctFrom(latestRow[4], eventRow[4]);
     const cls = (value) => value >= 0 ? 'up-text' : 'down-text';
-    const eventState = latestRow[4] < reportData.current.invalidation && reportData.realYield.value >= 2.40
+    const latestRealYield = Number(reportData.realYield.value);
+    const eventState = latestRow[4] < reportData.current.invalidation && Number.isFinite(latestRealYield) && latestRealYield >= Math.max(...(reportData.realYield.series ?? []).slice(-5).map(row => Number(row.value)).filter(Number.isFinite), latestRealYield)
       ? {label: '结构失效', tone: 'danger'}
       : currentMove < 0
         ? {label: '回撤待观察', tone: 'warn'}
         : {label: '价格延续 · 资金待确认', tone: 'signal'};
-    q('#eventStudy').innerHTML = `<div class="event-study-head"><span class="event-study-title">事件价格反应 · ${event.label}</span><span id="eventStudyStatus" class="event-status ${eventState.tone}">${eventState.label}</span></div><div class="event-study-grid"><div class="event-study-cell"><small>事件前收盘</small><b>${prevRow ? prevRow[4].toLocaleString() : '暂无'}</b></div><div class="event-study-cell"><small>事件日收盘 / 日内</small><b class="${cls(dayMove)}">${eventRow[4].toLocaleString()} / ${fmtPct(dayMove)}</b></div><div class="event-study-cell"><small>次日 / 第3交易日</small><b class="${cls(nextMove)}">${fmtPct(nextMove)} / ${fmtPct(thirdMove)}</b></div><div class="event-study-cell"><small>当前相对事件日</small><b class="${cls(currentMove)}">${fmtPct(currentMove)}</b></div></div><div class="event-study-note"><strong>复盘结论：</strong>${studyNotes[index]}</div>`;
+    const windowNote = Number.isFinite(currentMove) && currentMove < 0 ? '当前价格低于事件日收盘，需检查是否为正常再定价或结构破坏。' : '当前价格仍高于事件日收盘，事件后的价格结果尚未被完全回吐。';
+    q('#eventStudy').innerHTML = `<div class="event-study-head"><span class="event-study-title">事件价格反应 · ${event.label}</span><span id="eventStudyStatus" class="event-status ${eventState.tone}">${eventState.label}</span></div><div class="event-study-grid"><div class="event-study-cell"><small>事件前收盘</small><b>${prevRow ? prevRow[4].toLocaleString() : '暂无'}</b></div><div class="event-study-cell"><small>事件日收盘 / 日内</small><b class="${cls(dayMove)}">${eventRow[4].toLocaleString()} / ${fmtPct(dayMove)}</b></div><div class="event-study-cell"><small>次日</small><b class="${cls(nextMove)}">${fmtPct(nextMove)}</b></div><div class="event-study-cell"><small>第3交易日</small><b class="${cls(thirdMove)}">${fmtPct(thirdMove)}</b></div><div class="event-study-cell"><small>第5交易日</small><b class="${cls(fifthMove)}">${fmtPct(fifthMove)}</b></div><div class="event-study-cell"><small>当前相对事件日</small><b class="${cls(currentMove)}">${fmtPct(currentMove)}</b></div></div><div class="event-study-note"><strong>复盘结论：</strong>${windowNote} 事件日期与XAU/USD现货K线一一对应；价格反应是Fact/Calculation，因果解释仍需结合实际收益率、ETF和CFTC的同窗证据。 <span class="evidence-badge evidence-partial">Calculation + Inference</span></div>`;
+  };
+  const renderEventButtons = () => {
+    const list = q('#eventList');
+    if (!list) return;
+    list.innerHTML = eventPoints.length ? eventPoints.map((event,index) => `<button class="event-btn${index === 0 ? ' active' : ''}" type="button" data-event="${index}" data-date="${event.coord[0]}" aria-pressed="${index === 0}"><strong>${event.label}</strong><small>${event.date ?? event.coord[0]} · 点击定位K线</small></button>`).join('') : '<div class="quality-caption">报告没有可核验的历史事件节点。</div>';
+    qa('.event-btn').forEach(btn => btn.addEventListener('click', () => selectEvent(Number(btn.dataset.event))));
   };
   const selectEvent = (index) => {
     const event = eventPoints[index];
+    if (!event) return;
     qa('.event-btn').forEach((b, i) => {const active=i===index;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
-    q('#eventDetail').innerHTML = eventDetails[index];
+    const eventRow = rows.find(row => row[0] === event.coord[0]);
+    const previousRow = rows[rows.findIndex(row => row[0] === event.coord[0]) - 1];
+    const eventReturn = pctFrom(eventRow?.[4], previousRow?.[4]);
+    q('#eventDetail').innerHTML = `<b>事件研究：</b>${event.label}（${event.date ?? event.coord[0]}）对应XAU/USD现货日线；事件日收盘${eventRow ? eventRow[4].toLocaleString() : '暂无'}，相对前一交易日${fmtPct(eventReturn)}。该价格事实不单独证明因果，后续方向需结合实际收益率、资金流和仓位变化。`;
     q('#chartEventState').innerHTML = '<i></i><span>已定位：'+event.label+'，对应 '+event.coord[0]+' 的 XAU/USD 日线已高亮</span>';
     renderEventStudy(index);
     if (chart) {
@@ -771,18 +3479,91 @@
       chart.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:rows.findIndex(row=>row[0]===event.coord[0])});
     }
   };
-  qa('.event-btn').forEach(btn => btn.addEventListener('click', () => selectEvent(Number(btn.dataset.event))));
+  const escapeHtml = (value) => String(value ?? '暂无').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  let nextCatalyst = null;
+  const renderCatalysts = () => {
+    const list = q('#catalystStack');
+    const catalysts = reportData.analysis?.catalysts ?? [];
+    if (!list) return;
+    list.innerHTML = catalysts.length ? catalysts.map(event => {
+      const date = event.date ?? null;
+      const parsed = date ? new Date(date) : null;
+      if (parsed && !Number.isNaN(parsed.getTime()) && parsed > new Date() && (!nextCatalyst || parsed < nextCatalyst.time)) nextCatalyst = {time:parsed,label:event.name ?? event.label ?? '下一事件'};
+      return `<div class="event-card"><div class="event-date">${escapeHtml(date ?? '日期待定')}</div><div><strong>${escapeHtml(event.name ?? event.label)}</strong><small>${escapeHtml(event.type ?? '事件节点')} · ${escapeHtml(event.source ?? '来源待注明')}</small></div></div>`;
+    }).join('') : '<div class="quality-caption">报告未提供未来事件节点；本区不以观察指标补齐催化剂。</div>';
+  };
+  const renderAuditLedger = () => {
+    const body = q('#auditTableBody'), sourceList = q('#sourceList'), boundary = q('#auditBoundary');
+    if (!body || !sourceList || !boundary) return;
+    const quote = reportData.quote ?? {}, history = reportData.ohlc?.audit ?? {}, ry = reportData.realYield ?? {};
+    const aux = reportData.auxiliary?.rows ?? [];
+    const rowsForAudit = [
+      {name:'XAU/USD现货最新公开报价',value:Number.isFinite(Number(quote.value)) ? Number(quote.value).toLocaleString() : '未核验',asOf:quote.capturedAt ?? null,source:quote.source,detail:`抓取 ${quote.retrievedAt ?? '未核验'} · ${quote.delayNote ?? '公开报价，非可执行价'}`},
+      {name:'XAU/USD现货历史OHLC',value:reportData.current.lastClose ? `${reportData.current.lastClose.toLocaleString()} · ${history.rowCount ?? reportData.priceRows?.length ?? 0}行` : '未核验',asOf:history.sourceAsOf ?? reportData.ohlc.latestDate,source:history.source,detail:`状态 ${history.status ?? '未核验'} · 抓取 ${history.retrievedAt ?? '未核验'} · ${history.sourceUrl ?? '来源URL未注明'}`},
+      {name:'10年期实际收益率连续序列',value:Number.isFinite(Number(ry.value)) ? `${Number(ry.value).toFixed(2)}% · ${ry.series?.length ?? 0}日` : '未核验',asOf:ry.latestDate,source:ry.source,detail:`抓取 ${ry.audit?.retrievedAt ?? '未核验'} · ${ry.audit?.sourceUrl ?? '来源URL未注明'}`},
+      ...aux.map(item => ({name:item.name,value:item.value ?? '未核验',asOf:item.latestDate,published:item.publishedAt,source:item.source,detail:`发布日期 ${item.publishedAt ?? '未注明'} · 滞后 ${Number.isFinite(Number(item.lagDays)) ? item.lagDays+'天' : '未核验'} · 状态 ${item.status ?? '未核验'}`})),
+      {name:'GLD/IAU日度流量代理',value:reportData.etfFlows?.status ?? '未核验',asOf:reportData.etfFlows?.meta?.asOf,source:'GLD / IAU官方',detail:`GLD：${reportData.etfFlows?.series?.GLD?.status ?? '未核验'}（${reportData.etfFlows?.series?.GLD?.sourceUrl ?? 'URL未注明'}） · IAU：${reportData.etfFlows?.series?.IAU?.status ?? '未核验'}（${reportData.etfFlows?.series?.IAU?.sourceUrl ?? 'URL未注明'}） · 抓取 ${reportData.etfFlows?.meta?.generatedAt ?? '未核验'} · 连续性分别为 ${reportData.etfFlows?.series?.GLD?.continuity?.status ?? '未核验'} / ${reportData.etfFlows?.series?.IAU?.continuity?.status ?? '未核验'}`},
+      {name:`CFTC ${reportData.positioning?.latest?.positioningGroup ?? '仓位'} / OI拆解`,value:reportData.positioning?.latest?.managedMoneyNetLong ?? reportData.positioning?.latest?.netLong ?? '未核验',asOf:reportData.positioning?.audit?.positioningAsOf ?? reportData.positioning?.latestDate,published:reportData.positioning?.publishedAt ?? reportData.positioning?.audit?.publishedAt,source:reportData.positioning?.audit?.source ?? reportData.positioning?.source,detail:`抓取 ${reportData.positioning?.audit?.retrievedAt ?? reportData.positioning?.retrievedAt ?? '未核验'} · URL ${reportData.positioning?.audit?.sourceUrl ?? reportData.positioning?.sourceUrl ?? '未注明'} · Long ${reportData.positioning?.latest?.managedMoneyLong ?? reportData.positioning?.latest?.nonCommercialLong ?? '未核验'} · Short ${reportData.positioning?.latest?.managedMoneyShort ?? reportData.positioning?.latest?.nonCommercialShort ?? '未核验'} · OI ${reportData.positioning?.latest?.openInterest ?? '未核验'} · 价格机制 ${reportData.positioning?.latest?.mechanism?.label ?? '未解析'}`}
+    ];
+    body.innerHTML = rowsForAudit.map(item => `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.value)}</td><td>${escapeHtml(item.asOf)}${item.published ? `<br><small>发布 ${escapeHtml(item.published)}</small>` : ''}</td><td>${escapeHtml(item.source)}<br><small>${escapeHtml(item.detail)}</small></td></tr>`).join('');
+    sourceList.innerHTML = rowsForAudit.map(item => `<div class="source-item"><span>${escapeHtml(item.name)}</span><b>${escapeHtml(item.source)} · ${escapeHtml(item.asOf)}</b></div>`).join('');
+    const continuity = reportData.etfFlows?.series ? Object.entries(reportData.etfFlows.series).map(([symbol,item]) => `${symbol}：${item.continuity?.interpretation ?? '未核验'}`).join('；') : 'GLD/IAU官方日度代理未核验';
+    boundary.innerHTML = `<b>数据边界：</b>所有价格和技术指标只使用XAU/USD现货；ETF、CFTC和实际收益率仅作辅助解释。实际收益率序列${ry.series?.length ? '已接入' : '未接入'}；ETF连续性规则：${escapeHtml(continuity)}；现货期权链不纳入本报告。`;
+    const auditTag = q('#auditStatusTag');
+    if (auditTag) { const refreshed = history.status === 'refreshed'; auditTag.textContent = refreshed ? 'OHLC来源已审计' : '历史OHLC待补来源审计'; auditTag.className = `tag ${refreshed ? 'tag-signal' : 'tag-warn'}`; }
+  };
+  renderEventButtons();
   renderReportHealth();
+  renderQualityOverview();
+  renderRealYieldAudit();
+  renderRiskReward();
+  renderDynamicSummary();
   renderReportDelta();
   renderEventStudy(0);
+  renderCatalysts();
+  renderAuditLedger();
   qa('[data-fold]').forEach(btn => btn.addEventListener('click', () => {const el=q('#'+btn.dataset.fold);const open=el.classList.toggle('open');btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open));}));
   qa('[data-tab]').forEach(btn => btn.addEventListener('click', () => {qa('[data-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');qa('.scenario-panel').forEach(p=>p.classList.remove('active'));q('#scenario-'+btn.dataset.tab).classList.add('active');}));
-  const target = new Date('2026-08-26T12:30:00Z');
-  const tick = () => {const d=Math.max(0,target-Date.now());const days=Math.floor(d/86400000);const hours=Math.floor(d%86400000/3600000);const mins=Math.floor(d%3600000/60000);q('#countdown').textContent=d?'距美国7月PCE '+days+'天'+String(hours).padStart(2,'0')+'时'+String(mins).padStart(2,'0')+'分':'事件已开始';};tick();setInterval(tick,60000);
+  const tick = () => {const target = nextCatalyst?.time; if (!target) {q('#countdown').textContent='暂无可倒计时事件'; return;} const d=Math.max(0,target-Date.now());const days=Math.floor(d/86400000);const hours=Math.floor(d%86400000/3600000);const mins=Math.floor(d%3600000/60000);q('#countdown').textContent=d?`距${nextCatalyst.label} ${days}天${String(hours).padStart(2,'0')}时${String(mins).padStart(2,'0')}分`:'事件已开始';};tick();setInterval(tick,60000);
   const modules = [
-    ['1','研究对象','只研究XAU/USD现货，其他资产只作解释变量。'],['2','最新信息','价格用8月21日收盘，低频数据按最新发布期。'],['3','来源优先级','官方数据优先，二级来源仅补充共识。'],['4','事实与推断','事实、共识、推断、假设分层。'],['5','市场状态','上涨趋势中的加速阶段，尚未完全共振。'],['6','价格驱动','政策预期差、价格动量、美元是当前重点。'],['7','Fed','利率3.50%—3.75%，9月加息概率39%。'],['8','通胀','核心CPI环比低于预期，但通胀仍高。'],['9','就业增长','非农-2.3万，增长动能放缓但未衰退。'],['10','实际收益率','2.40%，仍是核心约束。'],['11','美元','约98.77，边际偏利多但证据较弱。'],['12','央行购金','长期底盘，不能直接当短线信号。'],['13','ETF流量','7月全球+$3bn，北美恢复有限。'],['14','CFTC仓位','管理基金净多139,004手，偏多且滞后。'],['15','衍生品','现货期权链不透明，不用COMEX替代。'],['16','地缘政治','避险通道与油价通道双向冲击。'],['17','流动性','最新统一数值不足，降低权重。'],['18','叙事风险','偏鹰环境下黄金强势已进入共识扩散。'],['19','仓位结构','现有多头不低，新买家仍待确认。'],['20','反身性','正向初步形成，尚未完成闭环。'],['21','执行风险','基本面正确不等于当前价格可追。'],['22','风险溢价','短线动量溢价可能较高。'],['23','预期差','偏鹰纪要发布日上涨是最大正向差。'],['24','边际买家','欧洲/亚洲ETF是已知候选，8月待确认。'],['25','技术结构','压力4,600—4,635，支持4,500—4,525。'],['26','四维确认','价格强，资金/仓位/宏观尚未完全共振。'],['27','三种情景','看多需站稳4,635，基准是高位震荡。'],['28','概率原则','不把FedWatch概率当黄金涨跌概率。'],['29','风险收益','当前到压力上行有限，不适合追涨。'],['30','失效条件','4,300下方且实际收益率上行。'],['31','催化剂','8月26日PCE，8月28日就业修订。'],['32','监控面板','现货、实际收益率、ETF为Top3。'],['33','输出结构','数据账本、价格、事件、推演、审计。'],['34','研究纪律','不编造，不把滞后数据冒充最新。'],['35','最终原则','等待实际收益率和边际资金确认。']
+    ['1','研究对象','只研究XAU/USD现货，其他资产只作解释变量。'],['2','最新信息','按报告数据动态读取最新价格与各自发布日期。'],['3','来源优先级','官方数据优先，二级来源仅补充共识。'],['4','事实与推断','事实、共识、推断、假设分层。'],['5','市场状态','按报告数据动态读取当前市场状态。'],['6','价格驱动','按报告数据动态读取驱动归因。'],['7','Fed','按报告数据动态读取政策路径与来源日期。'],['8','通胀','按报告数据动态读取实际值、预期和发布日期。'],['9','就业增长','按报告数据动态读取就业数据与滞后天数。'],['10','实际收益率','按报告数据动态读取连续序列与窗口变化。'],['11','美元','按报告数据动态读取美元方向与证据权重。'],['12','央行购金','长期底盘，不能直接当短线信号。'],['13','ETF流量','按报告数据动态读取GLD/IAU状态与连续性。'],['14','CFTC仓位','按报告数据动态读取多空、OI和价格机制。'],['15','衍生品','现货期权链不纳入本报告，不使用其他期权价格替代。'],['16','地缘政治','避险通道与油价通道双向冲击。'],['17','流动性','最新统一数值不足，降低权重。'],['18','叙事风险','按报告数据动态读取市场故事与定价阶段。'],['19','仓位结构','按报告数据动态读取已有仓位与边际买家缺口。'],['20','反身性','按报告数据动态读取资金与价格的反身性证据。'],['21','执行风险','基本面正确不等于当前价格可追。'],['22','风险溢价','短线动量溢价可能较高。'],['23','预期差','按报告数据动态读取正负向预期差。'],['24','边际买家','按报告数据动态读取潜在边际买家。'],['25','技术结构','按报告数据动态读取压力、支持和失效位。'],['26','四维确认','按报告数据动态读取价格、资金、仓位和宏观。'],['27','三种情景','看多需站稳压力位，基准是高位震荡。'],['28','概率原则','不把政策路径概率当黄金涨跌概率。'],['29','风险收益','按报告数据动态计算当前风险收益。'],['30','失效条件','按报告数据动态读取技术和宏观失效条件。'],['31','催化剂','按报告数据动态读取未来事件，不混入观察指标。'],['32','监控面板','按报告数据动态读取Top3监控指标。'],['33','输出结构','数据账本、价格、事件、推演、审计。'],['34','研究纪律','不编造，不把滞后数据冒充最新。'],['35','最终原则','按报告数据动态读取当前交易偏向与证伪条件。']
   ];
-  const grid=q('#moduleGrid');modules.forEach((m,i)=>{const b=document.createElement('button');b.type='button';b.className='module-btn'+(i===4?' active':'');b.textContent=m[0]+' · '+m[1];b.addEventListener('click',()=>{qa('.module-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');q('#moduleDetail').innerHTML='<b>模块'+m[0]+' · '+m[1]+'：</b>'+m[2];});grid.appendChild(b);});
+  const moduleDynamicText = {
+    1:`研究对象固定为${reportData.current?.lastClose ? 'XAU/USD现货' : 'XAU/USD现货'}；辅助资产只解释宏观、资金和风险偏好，不替代现货价格。`,
+    2:`XAU/USD现货最新收盘 ${reportData.ohlc.latestDate ?? '未核验'}；低频数据保留各自最新发布日期。`,
+    5:reportData.current.marketState ?? '未核验',
+    6:reportData.analysis.summary?.driver ?? '当前第一驱动未核验',
+    7:(reportData.auxiliary.rows ?? []).find(item => item.name === 'FedWatch')?.value ?? '政策路径概率未核验',
+    9:(reportData.auxiliary.rows ?? []).find(item => item.name === '就业')?.latestDate ? `最新就业数据截止 ${(reportData.auxiliary.rows ?? []).find(item => item.name === '就业').latestDate}；发布日期 ${(reportData.auxiliary.rows ?? []).find(item => item.name === '就业').publishedAt ?? '未核验'}。` : '就业数据未核验',
+    10:`${Number.isFinite(Number(reportData.realYield.value)) ? Number(reportData.realYield.value).toFixed(2)+'%' : '未核验'}；连续序列${reportData.realYield.series?.length ?? 0}个观测日。`,
+    11:(reportData.analysis.drivers ?? []).find(item => item.name === '美元')?.state ?? '美元方向未核验',
+    13:`IAU ${reportData.etfFlows.series?.IAU?.status ?? '未核验'}；GLD ${reportData.etfFlows.series?.GLD?.status ?? '未核验'}；连续性按3日规则判断。`,
+    14:`${reportData.positioning.latest?.positioningGroup ?? 'CFTC仓位'}净多 ${reportData.positioning.latest?.netLong ?? '未核验'}；Long、Short、OI与价格机制已拆解。`,
+    25:`压力 ${reportData.current.pressureLow}—${reportData.current.pressureHigh}；支持 ${reportData.current.supportLow}—${reportData.current.supportHigh}；失效 ${reportData.current.invalidation}。`,
+    18:reportData.analysis.summary?.marketKnown ?? '当前市场故事未核验',
+    19:reportData.analysis.summary?.marketUnknown ?? '边际买家未核验',
+    20:reportData.analysis.fourDimension?.flow ?? '反身性未核验',
+    23:reportData.analysis.summary?.positiveGap ?? '正向预期差未核验',
+    24:(reportData.analysis.watch ?? []).find(item => /ETF|买家|资金/.test(item.name))?.detail ?? '边际买家未核验',
+    26:`价格：${reportData.analysis.fourDimension?.price ?? '未核验'}；资金：${reportData.analysis.fourDimension?.flow ?? '未核验'}；仓位：${reportData.analysis.fourDimension?.positioning ?? '未核验'}；宏观：${reportData.analysis.fourDimension?.macro ?? '未核验'}。`,
+    29:reportData.analysis.summary?.action ?? '风险收益未核验',
+    30:reportData.analysis.failureConditions?.technical ?? '技术失效条件未核验',
+    31:(reportData.analysis.catalysts ?? []).map(item => item.name).join('、') || '未来事件未核验',
+    32:(reportData.analysis.watch ?? []).map(item => item.name).join('、') || '监控指标未核验',
+    35:reportData.current.bias ?? '交易偏向未核验'
+  };
+  modules.forEach(item => { if (moduleDynamicText[item[0]]) item[2] = moduleDynamicText[item[0]]; });
+  const verifiedModules = new Set([1,3,8,22,28,34]);
+  const missingModules = new Set([9,17,20]);
+  const notApplicableModules = new Set([15]);
+  const moduleEvidence = (id) => {
+    if (verifiedModules.has(id)) return {label:'已核验', type:'Fact', cls:'evidence-fact', impact:'有直接来源、规则或明确计算，可进入核心判断。'};
+    if (notApplicableModules.has(id)) return {label:'不适用', type:'Not applicable', cls:'evidence-partial', impact:'现货期权链不作为本报告指标；该模块不影响本报告置信度，也不使用其他品种期权价格替代。'};
+    if (missingModules.has(id)) return {label:'缺失', type:'Unknown', cls:'evidence-missing', impact:'当前没有可同频核验的数据，不纳入核心结论，只保留数据缺口。'};
+    return {label:'部分核验', type:'Inference', cls:'evidence-partial', impact:'包含滞后数据、代理变量或推断，结论可以使用但必须降低权重。'};
+  };
+  const grid=q('#moduleGrid');modules.forEach((m,i)=>{const id=Number(m[0]);const evidence=moduleEvidence(id);const b=document.createElement('button');b.type='button';b.className='module-btn'+(i===4?' active':'');b.innerHTML=`${m[0]} · ${m[1]} <span class="evidence-badge ${evidence.cls}">${evidence.label}</span>`;b.addEventListener('click',()=>{qa('.module-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');q('#moduleDetail').innerHTML=`<b>模块${m[0]} · ${m[1]}：</b>${m[2]}<div class="quality-caption"><b>证据层级：</b>${evidence.type} · ${evidence.impact}</div>`;});grid.appendChild(b);});
+  if (modules[4] && q('#moduleDetail')) q('#moduleDetail').innerHTML=`<b>模块${modules[4][0]} · ${modules[4][1]}：</b>${modules[4][2]}<div class="quality-caption"><b>证据层级：</b>Inference · 当前结论包含辅助数据滞后和价格推断，需降低权重。</div>`;
   const modal = document.getElementById('analysisModal');
   const modalTitle = document.getElementById('analysisModalTitle');
   const modalMeta = document.getElementById('analysisModalMeta');
@@ -804,16 +3585,24 @@
     '叙事、反身性与风险溢价': '<h3>当前最大叙事是什么</h3><p>市场正在交易“偏鹰政策环境下黄金仍然强势”。它的早期阶段由政策预期差和价格突破推动，扩散阶段由媒体关注和资产配置需求推动，进入共识后，新增信息空间会收窄。叙事越广为人知，价格越需要资金流确认。</p><h3>正向反身性与负向反身性</h3><p>正向路径是价格上涨带来关注和ETF流入，ETF流入再强化价格；负向路径是价格回撤带来ETF流出、多头去杠杆和更低的价格。当前只确认前半段，尚未确认ETF和现货承接组成的完整闭环。</p><h3>风险溢价压缩</h3><p>黄金价格可能包含地缘、财政、美元信用和储备多元化溢价。如果地缘风险缓和或实际收益率重新上行，风险溢价压缩可以造成价格下跌，即使长期结构性逻辑没有消失。因此风险溢价是价格的边际解释，不是永远有效的方向信号。</p><div class="deep-conclusion deep-risk"><strong>失效线索：</strong>故事仍在传播，但好消息不再推动价格上涨，说明叙事可能从扩散进入拥挤，执行风险上升。</div>',
     '催化剂时间轴': '<h3>催化剂只列事件，不提前替事件填入结果</h3><p>未来事件的作用是标记潜在波动窗口，而不是预测数据方向。PCE、就业修订、FOMC利率决议和全球主要央行会议分别对应通胀路径、增长数据修订、政策路径和储备配置叙事。事件前不把“预期结果”写成已经发生的事实。</p><h3>事件前后的观察顺序</h3><p>事件前看价格是否已经提前定价，事件当天看实际收益率与美元的第一轮反应，事件后看XAU/USD是否守住或突破关键位，再观察资金是否跟随。这样可以避免把单日波动直接等同于事件的长期影响。</p><h3>时间窗口</h3><p>1—7天关注最近事件和价格位置；1—4周关注政策路径与资金是否同频；1—3个月关注央行配置、通胀和实际收益率趋势。不同时间尺度不能用同一个催化剂结论替代。</p><div class="deep-conclusion"><strong>使用方式：</strong>催化剂是待观察的事件节点，方向需要由事件后的价格、实际收益率和资金行为共同决定。</div>',
     'Top3监控与价格传导': '<h3>为什么只把三个指标放在最前面</h3><p>XAU/USD现货价格负责告诉我们市场最终做了什么；10年期实际收益率负责告诉我们黄金机会成本是否顺风；全球黄金ETF流量负责观察西方边际资金是否回来。三者分别覆盖价格、宏观约束和新买家，信息增量高于同时堆叠十几个相关指标。</p><h3>强、弱、反转三种组合</h3><p>强确认是现货站稳4,635、实际收益率回落、ETF继续流入；弱确认是价格上涨但实际收益率上行、ETF无流入；反转确认是现货跌破4,500并向4,300发展，同时实际收益率上行、ETF流出。每种组合都比单一指标更能解释交易执行。</p><h3>价格传导</h3><p>实际收益率回落不会自动带来上涨，它只是降低逆风；ETF流入也可能滞后于价格。只有在价格不再被高估、实际收益率没有继续恶化且资金愿意接力时，三者才形成可交易的闭环。</p><div class="deep-conclusion"><strong>监控优先级：</strong>先看现货是否在关键位做出选择，再看实际收益率方向，最后用ETF流量验证新买家。</div>',
-    '买家与数据缺口': '<h3>买家按持有期限分层</h3><p>央行是长期结构性买家，全球黄金ETF是中期边际买家候选，管理基金和期权是短期杠杆行为代理。三类数据的发布日期、时效和价格敏感度不同，不能把它们放在同一个时间轴上直接比较。</p><h3>数据缺口如何影响结论</h3><p>缺少日度ETF净流量时，无法确认上涨是否有西方资金同步；缺少现货期权链时，无法严谨判断隐含波动率、偏度和行权价墙；缺少统一流动性数据时，全球美元流动性的权重必须下调。缺口不会自动变成看空或看多，只会降低相关判断的置信度。</p><h3>代理数据边界</h3><p>期货、ETF和期权可以解释资金、仓位和边际买家，但不能替代XAU/USD的价格、支撑、压力、涨跌幅和风险收益。所有代理数据必须带有截止日期、发布日期、来源和滞后说明。</p><div class="deep-conclusion"><strong>当前结论：</strong>长期买家存在，中期买家有线索，8月短线边际资金仍需核验；因此价格趋势可以承认，持续性不能提前假定。</div>',
+    '买家与数据缺口': '<h3>买家按持有期限分层</h3><p>央行是长期结构性买家，全球黄金ETF是中期边际买家候选，管理基金是短期杠杆行为代理。三类数据的发布日期、时效和价格敏感度不同，不能把它们放在同一个时间轴上直接比较。</p><h3>日度ETF流量的可行获取方式</h3><p>免费且可审计的优先方案是读取GLD和IAU发行方每日公布的份额、净资产和黄金持仓，用“份额变化 × 当日NAV”计算一级市场流量代理；该指标反映创建/赎回，不等同于二级市场成交净流量。世界黄金协会全球ETF流量仍作为月度结构数据，不能与GLD/IAU日度代理直接相加。</p><h3>数据缺口如何影响结论</h3><p>在日度代理接入前，无法确认8月上涨是否有西方资金同步；缺少统一流动性数据时，全球美元流动性的权重必须下调。现货期权链不属于本报告研究范围，不再作为缺口或置信度扣分项。</p><h3>代理数据边界</h3><p>期货持仓、ETF流量和央行购金可以解释资金、仓位和边际买家，但不能替代XAU/USD的价格、支撑、压力、涨跌幅和风险收益。所有代理数据必须带有截止日期、发布日期、抓取时间、来源、滞后天数和计算方法。</p><div class="deep-conclusion"><strong>当前结论：</strong>长期买家存在，中期买家有线索，8月短线边际资金仍需核验；因此价格趋势可以承认，持续性不能提前假定。</div>',
     '谁还可能接力，什么证据能证明': '<h3>边际买家问题比“谁已经买了”更重要</h3><p>央行和已经持有多头的资金解释了为什么价格能够上涨，但不能说明下一段上涨由谁推动。若价格再上涨10%，真正需要观察的是ETF配置资金、CTA或宏观基金是否因为趋势和波动率变化而增加仓位。</p><h3>可验证证据</h3><p>现货回踩后快速收复、ETF流量改善、未平仓量和净多变化与价格方向一致，才说明买家在边际上增加。若价格创新高但ETF不变、OI下降，可能是空头回补而非新买家；若价格下跌且OI上升，新的空头可能正在进入。</p><h3>预期差</h3><p>市场普遍知道央行购金和去美元化故事，隐藏预期差在于西方资金是否重新配置。如果这一证据出现，长期叙事才可能转成中期趋势；如果没有出现，价格继续上涨的空间会受到边际买盘不足限制。</p><div class="deep-conclusion"><strong>观察结论：</strong>当前最值得追踪的不是已有买家名单，而是价格上涨后新增买家是否真正出现。</div>',
-    '数据账本、时效与来源': '<h3>数据审计的目的</h3><p>审计不是把所有数据都强行更新到同一天，而是明确每个变量的截止日期、发布日期、抓取时间、来源、滞后天数和质量。现货价格需要尽可能接近当前交易日；CPI、就业、ETF和CFTC属于低频或定期数据，必须保留其真实发布节奏。</p><h3>时效不等于权重</h3><p>一个昨天发布的二级共识概率，不一定比一个两周前发布的官方仓位数据更可靠。判断权重需要同时考虑来源等级、数据是否直接测量目标变量、发布日期和是否被后续事件覆盖。旧数据可以使用，但不能冒充最新状态。</p><h3>缺口处理</h3><p>实时ETF净流量、现货期权链和全球美元流动性如果无法同频核验，应标记为缺口并降低权重，而不是填入估算数字。缺口越集中在边际买家和执行模块，最终评级就越应保守。</p><div class="deep-conclusion"><strong>审计底线：</strong>任何价格、涨跌幅、支撑阻力和风险收益结论都不能使用未核验或被期货价格替代的XAU/USD数据。</div>',
+    '数据账本、时效与来源': '<h3>数据审计的目的</h3><p>审计不是把所有数据都强行更新到同一天，而是明确每个变量的截止日期、发布日期、抓取时间、来源、滞后天数和质量。现货价格需要尽可能接近当前交易日；CPI、就业、ETF和CFTC属于低频或定期数据，必须保留其真实发布节奏。</p><h3>ETF日度流量的口径</h3><p>GLD和IAU发行方的每日份额变化可以计算一级市场流量代理，但必须保留公式、NAV、份额观察日和发行方更新时间。它不能代表全球所有黄金ETF，也不能与世界黄金协会月度全球流量直接拼接成一个数字。</p><h3>缺口处理</h3><p>如果官方ETF份额或NAV当日没有更新，标记为待更新并沿用最新可得日期；全球美元流动性如果无法同频核验，应标记缺口并降低权重。现货期权链已被明确排除，不再进入缺口统计。</p><div class="deep-conclusion"><strong>审计底线：</strong>任何价格、涨跌幅、支撑阻力和风险收益结论都不能使用未核验或被期货价格替代的XAU/USD数据。</div>',
     '原始35模块索引': '<h3>35模块不是35个平行指标</h3><p>研究顺序应从研究对象和数据纪律开始，再进入市场状态、宏观驱动、资金和仓位，最后才进入叙事、情景和交易执行。这样可以避免先有观点再搜数据，也避免把央行购金、地缘和技术图形分别当成独立方向信号。</p><h3>因果链的层级</h3><p>事实层回答发生了什么；共识层回答市场原本预期什么；推断层解释数据如何影响Fed、实际收益率、美元和黄金；假设层建立Bull、Base、Bear路径。每一层都必须标注，不能把推断写成事实。</p><h3>最终自检</h3><p>报告完成前需要逐项检查：价格是否是XAU/USD现货；K线是否真实开高低收且红涨绿跌；事件日期是否与K线对应；实际收益率是否核心化；ETF、CFTC、期权和边际买家是否带有时效和来源；是否明确什么证据会推翻观点。</p><div class="deep-conclusion"><strong>研究原则：</strong>事实大于预期，预期大于仓位，仓位大于资金，资金大于价格叙事，预测只能放在最后。</div>',
-    '本次报告变化': '<h3>新增最新报价，但没有改变价格基准</h3><p>上一版使用的是8月21日周五XAU/USD现货收盘价4,603.56。本版在保留这条日线基准的同时，新增8月23日00:58 UTC的公开报价4,604.399902，并在首屏标注源时间、抓取时间和“非可执行价”说明。两者属于不同时间语义，不能把周末公开报价直接写成新的日线收盘。</p><h3>为什么评级没有自动升级</h3><p>公开报价只说明当前市场仍接近周五收盘，并不能证明新的买家正在接力。评级仍为轻度看多，是因为价格结构偏强，但实际收益率仍在2.40%、ETF数据滞后、现货期权链缺失，价格与宏观和资金尚未形成完整共振。</p><h3>对交易执行的影响</h3><p>本版真正新增的不是一个更乐观的数字，而是更清晰的证据边界：可以承认现货价格强势延续，但不能把最新报价当成突破确认。只有现货站稳压力、实际收益率不再上行并出现资金承接，才考虑把“等待确认”升级为更积极的执行状态。</p><div class="deep-conclusion"><strong>变化结论：</strong>数据可见性提高，观点强度不提高；这正是数据更新与交易结论之间应保持的距离。</div>'
+    '本次报告变化': '<h3>新增最新报价，但没有改变价格基准</h3><p>上一版使用的是8月21日周五XAU/USD现货收盘价4,603.56。本版在保留这条日线基准的同时，新增8月23日00:58 UTC的公开报价4,604.399902，并在首屏标注源时间、抓取时间和“非可执行价”说明。两者属于不同时间语义，不能把周末公开报价直接写成新的日线收盘。</p><h3>为什么评级没有自动升级</h3><p>公开报价只说明当前市场仍接近周五收盘，并不能证明新的买家正在接力。评级仍为轻度看多，是因为价格结构偏强，但实际收益率仍在2.40%、ETF数据滞后，价格与宏观和资金尚未形成完整共振。</p><h3>对交易执行的影响</h3><p>下一步优先补充GLD/IAU官方日度流量代理，并保留其创建/赎回口径，不把它冒充全球ETF净流量。只有现货站稳压力、实际收益率不再上行并出现资金承接，才考虑把“等待确认”升级为更积极的执行状态。</p><div class="deep-conclusion"><strong>变化结论：</strong>数据可见性提高，观点强度不提高；这正是数据更新与交易结论之间应保持的距离。</div>'
   };
+  const dynamicAnalysisValues = {
+    '2.40%': Number.isFinite(Number(reportData.realYield.value)) ? `${Number(reportData.realYield.value).toFixed(2)}%` : '实际收益率未核验',
+    '139,004': Number.isFinite(Number(reportData.positioning.latest?.netLong)) ? Number(reportData.positioning.latest.netLong).toLocaleString() : 'CFTC净多未核验',
+    '4,600—4,635': `${reportData.current.pressureLow}—${reportData.current.pressureHigh}`,
+    '4,500—4,525': `${reportData.current.supportLow}—${reportData.current.supportHigh}`,
+    '4,300': String(reportData.current.invalidation)
+  };
+  Object.keys(deepAnalysisByTitle).forEach(key => { dynamicAnalysisValues && Object.entries(dynamicAnalysisValues).forEach(([from,to]) => { deepAnalysisByTitle[key] = deepAnalysisByTitle[key].replaceAll(from,to); }); });
   const buildDeltaAnalysis = () => {
     const health = renderReportHealth();
     const delta = renderReportDelta();
-    return `<h3>本次报告的变化由数据对象计算</h3><p>${delta.newText}</p><p>${delta.unchangedText}</p><h3>数据健康度如何影响结论权重</h3><p>本次健康度为 ${health.score}/5。现货报价、30日OHLC和实际收益率可以直接支撑价格与宏观判断；资金与仓位虽可使用，但存在滞后；现货期权链缺失，因此不能把期权结构写成已核验的边际买家证据。</p><h3>变化如何影响交易执行</h3><p>${delta.executionText}</p><div class="deep-conclusion"><strong>产品化结论：</strong>数据更新只改变证据可见性，不自动改变评级。只有新的事实改变因果链，报告才应该改变交易状态。</div>`;
+    return `<h3>本次报告的变化由数据对象计算</h3><p>${delta.newText}</p><p>${delta.unchangedText}</p><h3>数据健康度如何影响结论权重</h3><p>本次健康度为 ${health.score}/${Object.keys(health.checks).length}。现货报价、30日OHLC和实际收益率可以直接支撑价格与宏观判断；资金与仓位虽可使用，但存在滞后；现货期权链已被排除，不再作为缺口或置信度扣分项。</p><h3>变化如何影响交易执行</h3><p>${delta.executionText}</p><div class="deep-conclusion"><strong>产品化结论：</strong>数据更新只改变证据可见性，不自动改变评级。只有新的事实改变因果链，报告才应该改变交易状态。</div>`;
   };
   const openAnalysisByTitle = (title) => {
     modalTitle.textContent = title;
