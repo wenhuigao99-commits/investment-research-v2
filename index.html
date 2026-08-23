@@ -3,39 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>黄金研究报告</title>
+  <title>黄金 XAU/USD 研究台 V6</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: {
+      ivory: '#F7F3EA', ink: '#1F2937', gold: '#B6872A', goldDark: '#6E4C12',
+      line: '#E3DAC8', up: '#EF4444', signal: '#0F8A68', warn: '#C47A14'
+    }}}};
+  </script>
   <style>
-    :root { --ink:#24313d; --muted:#637180; --line:#dfe6eb; --paper:#f6f8fa; --card:#fff; --blue:#17324d; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:var(--paper); font:16px/1.7 "Segoe UI","Microsoft YaHei",sans-serif; }
-    main { max-width:900px; margin:0 auto; padding:32px 20px 60px; }
-    header { background:var(--blue); color:#fff; border-radius:14px; padding:26px 28px; }
-    h1 { margin:0 0 6px; font-size:28px; } p { margin:0; color:var(--muted); }
-    header p { color:#d9e6f2; }
-    section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin-top:16px; }
-    h2 { margin:0 0 12px; color:var(--blue); font-size:20px; }
-    a { color:#2563eb; text-decoration:none; } a:hover { text-decoration:underline; }
-    .latest { display:block; border:1px solid #b9d1e6; border-radius:10px; padding:16px; background:#f3f7fb; font-weight:700; }
-    li { margin:8px 0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #F7F3EA; color: #1F2937; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+    .surface { background: rgba(255,255,255,.9); border: 1px solid #E3DAC8; box-shadow: 0 8px 22px rgba(110,76,18,.08); }
+    .eyebrow { color: #B6872A; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .gold-rule { height: 3px; background: linear-gradient(90deg,#B6872A,#E7C46A,transparent); }
+    .link-card { transition: transform .2s ease, box-shadow .2s ease; }
+    .link-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(110,76,18,.13); }
   </style>
 </head>
 <body>
-  <main>
-    <header>
-      <h1>黄金 XAU/USD 研究报告</h1>
-      <p>每日研究入口与历史报告索引</p>
+  <main class="mx-auto max-w-6xl px-4 py-5 sm:px-7 sm:py-8">
+    <header class="surface overflow-hidden rounded-2xl">
+      <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+        <div>
+          <div class="eyebrow">XAU/USD · 现货黄金 · 机构研究终端</div>
+          <h1 class="mt-2 text-3xl font-bold tracking-tight text-goldDark sm:text-5xl">黄金市场研究台 <span class="text-lg font-medium text-gold">V6</span></h1>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">深度分析版报告入口，保留事件推演、实际收益率、资金与价格确认，以及可展开的因果链分析。</p>
+        </div>
+        <div class="rounded-xl border border-line bg-ivory px-4 py-3 text-sm text-slate-600">
+          <div class="eyebrow">研究对象</div>
+          <strong class="mt-1 block text-ink">XAU/USD 现货</strong>
+          <span class="text-xs">不使用 COMEX 价格替代</span>
+        </div>
+      </div>
+      <div class="gold-rule"></div>
+      <div class="grid gap-px bg-line sm:grid-cols-3">
+        <div class="bg-white px-5 py-4"><div class="text-xs text-slate-500">当前版本</div><b class="mt-1 block text-lg text-goldDark">V6 深度分析版</b></div>
+        <div class="bg-white px-5 py-4"><div class="text-xs text-slate-500">发布策略</div><b class="mt-1 block text-lg text-signal">工作日 06:00</b></div>
+        <div class="bg-white px-5 py-4"><div class="text-xs text-slate-500">历史状态</div><b class="mt-1 block text-lg text-warn">旧版已清理</b></div>
+      </div>
     </header>
-    <section>
-      <h2>最新报告</h2>
-      <a class="latest" href="latest.html">打开最新报告 →</a>
+
+    <section class="mt-5 grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
+      <a href="latest.html" class="link-card surface rounded-2xl p-5 sm:p-7">
+        <div class="flex items-start justify-between gap-4">
+          <div><div class="eyebrow">Primary report</div><h2 class="mt-2 text-2xl font-bold text-goldDark">打开 V6 最新研究报告</h2></div>
+          <span class="rounded-full bg-[#EAF7F1] px-3 py-1 text-xs font-bold text-signal">可查看</span>
+        </div>
+        <p class="mt-4 text-sm leading-7 text-slate-600">查看完整的市场状态、数据审计、30日价格结构、事件节点、深度推演、预期差、Bull/Base/Bear 情景和交易失效条件。</p>
+        <div class="mt-5 inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-bold text-white">进入报告 <span aria-hidden="true">→</span></div>
+      </a>
+      <div class="surface rounded-2xl p-5 sm:p-7">
+        <div class="eyebrow">Version notes</div>
+        <h2 class="mt-2 text-xl font-bold text-goldDark">本次保留内容</h2>
+        <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+          <li>✓ 深度推演折叠交互</li>
+          <li>✓ 事件与 K 线日期联动</li>
+          <li>✓ 实际收益率核心观察</li>
+          <li>✓ 买家、缺口和证伪条件</li>
+        </ul>
+      </div>
     </section>
-    <section>
-      <h2>当前版本</h2>
-      <ul>
-        <li><a href="gold-institution-terminal-v6.html">V6｜机构级深度分析终端</a></li>
-      </ul>
-      <p>旧版历史报告已清理。</p>
+
+    <section class="surface mt-4 rounded-2xl p-5 sm:p-7">
+      <div class="flex flex-col gap-2 border-b border-line pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <div><div class="eyebrow">Archive</div><h2 class="mt-1 text-xl font-bold text-goldDark">报告归档</h2></div>
+        <span class="text-xs text-slate-500">旧版历史报告已删除，后续仅保留通过审计的版本</span>
+      </div>
+      <div class="mt-4 rounded-xl border border-[#EADDBE] bg-ivory p-4 text-sm text-slate-600">当前没有可展示的旧版历史报告。未来生成的报告将按日期追加到这里。</div>
     </section>
+
+    <footer class="px-1 py-6 text-xs text-slate-500">数据基准：XAU/USD 现货；辅助数据不替代现货价格。页面由 GitHub Pages 托管。</footer>
   </main>
 </body>
 </html>
