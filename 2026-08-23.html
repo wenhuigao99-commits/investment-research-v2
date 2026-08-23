@@ -38,9 +38,10 @@
     .event-btn{position:relative;transition:background .2s ease,border-color .2s ease,box-shadow .2s ease}.event-btn.active{box-shadow:inset 3px 0 0 var(--gold)}.event-btn.active::after{content:'已定位';position:absolute;right:7px;top:7px;color:var(--gold-dark);font-size:9px;font-weight:800}.event-date-note{font-size:10px;color:var(--gold-dark);font-weight:700}.chart-event-state{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--gold-dark);font-weight:700}.chart-event-state i{width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block;box-shadow:0 0 0 4px rgba(182,135,42,.15)}
     /* Responsive layout: keep three columns on desktop, but never compress the report into a clipped two-column mobile view. */
     @media(max-width:1120px){.terminal-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.right-column{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.sticky{position:static}}
-    @media(max-width:820px){.shell{padding:10px 11px 22px}.kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.terminal-grid{grid-template-columns:1fr}.left-column,.right-column{display:flex;grid-column:auto}.split-2,.audit-grid{grid-template-columns:1fr}.chart{height:330px}.event-list{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.column>.surface{width:100%}}
+    .mobile-lane-switcher{display:none}
+    @media(max-width:820px){.shell{padding:10px 11px 22px}.kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.terminal-grid{grid-template-columns:repeat(3,minmax(calc(100vw - 22px),1fr));overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px}.terminal-grid::-webkit-scrollbar{display:none}.terminal-grid>.column{scroll-snap-align:start;min-width:0}.mobile-lane-switcher{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:10px}.mobile-lane-switcher button{border:1px solid var(--line);background:var(--paper);color:var(--gold-dark);border-radius:8px;padding:7px 4px;font-size:11px;font-weight:700}.mobile-lane-switcher button.active{background:#FBF2D9;border-color:#D3AA58}.left-column,.right-column{display:flex;grid-column:auto}.split-2,.audit-grid{grid-template-columns:1fr}.chart{height:330px}.event-list{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.column>.surface{width:100%}}
     /* Some mobile browsers expose a wide CSS viewport. Touch detection is the fallback for those devices. */
-    @media (hover:none) and (pointer:coarse){.shell{max-width:100%;padding:10px 11px 22px}.terminal-grid{grid-template-columns:1fr}.right-column{display:flex;grid-column:auto}.sticky{position:static}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-value{font-size:17px}.panel-head{padding:11px 12px 9px}.panel-body{padding:11px 12px 13px}.split-2,.audit-grid{grid-template-columns:1fr}.scenario-cells{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.chart{height:300px}.four-grid{grid-template-columns:repeat(2,1fr)}.data-table{min-width:620px}.event-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (hover:none) and (pointer:coarse){.shell{max-width:100%;padding:10px 11px 22px}.terminal-grid{grid-template-columns:repeat(3,minmax(calc(100vw - 22px),1fr));overflow-x:auto}.right-column{display:flex;grid-column:auto}.sticky{position:static}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-value{font-size:17px}.panel-head{padding:11px 12px 9px}.panel-body{padding:11px 12px 13px}.split-2,.audit-grid{grid-template-columns:1fr}.scenario-cells{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.chart{height:300px}.four-grid{grid-template-columns:repeat(2,1fr)}.data-table{min-width:620px}.event-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:500px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-value{font-size:17px}.panel-head{padding:11px 12px 9px}.panel-body{padding:11px 12px 13px}.scenario-cells{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.chart{height:300px}.four-grid{grid-template-columns:repeat(2,1fr)}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
@@ -73,6 +74,12 @@
       <div class="kpi"><div class="kpi-label">管理基金净多</div><div class="kpi-value warn-text">139,004</div><div class="kpi-note">CFTC · 截止8月18日</div></div>
     </div>
   </header>
+
+  <nav class="mobile-lane-switcher" aria-label="手机端研究栏位">
+    <button type="button" class="active" data-lane="0">左栏 · 结论</button>
+    <button type="button" data-lane="1">中栏 · 分析</button>
+    <button type="button" data-lane="2">右栏 · 监控</button>
+  </nav>
 
   <div class="terminal-grid mt-3">
     <aside class="column sticky">
@@ -345,6 +352,19 @@
   modal.addEventListener('click', (event) => { if (event.target === modal) closeLongAnalysis(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeLongAnalysis(); });
   window.addEventListener('resize',()=>chart && chart.resize());
+})();
+</script>
+<script>
+(() => {
+  const rail = document.querySelector('.terminal-grid');
+  const tabs = [...document.querySelectorAll('.mobile-lane-switcher button')];
+  if (!rail || !tabs.length) return;
+  tabs.forEach((tab) => tab.addEventListener('click', () => {
+    const lane = rail.children[Number(tab.dataset.lane)];
+    if (!lane) return;
+    rail.scrollLeft = lane.offsetLeft;
+    tabs.forEach((item) => item.classList.toggle('active', item === tab));
+  }));
 })();
 </script>
 </body>

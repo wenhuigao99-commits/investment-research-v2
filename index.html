@@ -19,6 +19,7 @@
     .gold-rule { height: 3px; background: linear-gradient(90deg,#B6872A,#E7C46A,transparent); }
     .link-card { transition: transform .2s ease, box-shadow .2s ease; }
     .link-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(110,76,18,.13); }
+    @media(max-width:640px){.index-entry-grid{grid-template-columns:repeat(3,minmax(calc(100vw - 32px),1fr));overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:5px}.index-entry-grid::-webkit-scrollbar{display:none}.index-entry-grid>*{scroll-snap-align:start;min-width:0}}
   </style>
 </head>
 <body>
@@ -44,7 +45,7 @@
       </div>
     </header>
 
-    <section class="mt-5 grid gap-4 lg:grid-cols-3">
+    <section class="index-entry-grid mt-5 grid gap-4 lg:grid-cols-3">
       <a href="latest.html" class="link-card surface rounded-2xl p-5 lg:col-span-2 sm:p-7">
         <div class="flex items-start justify-between gap-4">
           <div><div class="eyebrow">Primary report</div><h2 class="mt-2 text-2xl font-bold text-goldDark">打开 V6 最新研究报告</h2></div>
