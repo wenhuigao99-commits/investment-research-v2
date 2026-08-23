@@ -49,7 +49,7 @@
       <div>
         <div class="eyebrow">XAU/USD · 现货黄金 · 机构研究终端</div>
         <h1 class="mt-1 text-2xl font-bold text-[#6E4C12] sm:text-3xl">黄金市场研究台 <span class="text-base font-medium text-[#B6872A]">V6</span></h1>
-        <p class="mt-1 text-xs muted">数据基准：2026年8月21日周五收盘　|　抓取时间：2026年8月23日　|　研究对象：XAU/USD现货，不含COMEX价格</p>
+        <p class="mt-1 text-xs muted">数据基准：2026年8月21日周五收盘 + 2026年8月23日最新公开报价　|　抓取时间：2026年8月23日 00:59 UTC　|　研究对象：XAU/USD现货，不含COMEX价格</p>
       </div>
       <div class="text-right text-xs">
         <div><span class="status-dot dot-warn"></span><strong class="warn-text">轻度看多</strong></div>
@@ -62,13 +62,14 @@
       <nav class="hidden sm:flex gap-1 text-[11px] muted"><a href="#price" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">价格结构</a><a href="#drivers" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">驱动归因</a><a href="#gap" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">预期差</a><a href="#audit" class="px-2 py-1 rounded hover:bg-[#FBF3DF]">数据账本</a></nav>
     </div>
     <div class="kpi-grid mt-4" aria-label="核心市场指标">
-      <div class="kpi"><div class="kpi-label">XAU/USD现货收盘</div><div class="kpi-value price-flash">4,603.56</div><div class="kpi-note up-text">美元/盎司 · 8月21日</div></div>
+      <div class="kpi"><div class="kpi-label">XAU/USD现货最新公开报价</div><div class="kpi-value price-flash">4,604.40</div><div class="kpi-note up-text">美元/盎司 · 源时间 8月23日 00:58 UTC</div></div>
       <div class="kpi"><div class="kpi-label">周五日变动</div><div class="kpi-value up-text">+1.87%</div><div class="kpi-note">收盘接近30日高点</div></div>
       <div class="kpi"><div class="kpi-label">10年期实际收益率</div><div class="kpi-value warn-text">2.40%</div><div class="kpi-note">8月21日 · 当日上行</div></div>
       <div class="kpi"><div class="kpi-label">9月维持利率概率</div><div class="kpi-value signal-text">61%</div><div class="kpi-note">FedWatch · 8月22日更新</div></div>
       <div class="kpi"><div class="kpi-label">全球黄金ETF流量</div><div class="kpi-value signal-text">+$3bn</div><div class="kpi-note">7月数据 · 滞后21天</div></div>
       <div class="kpi"><div class="kpi-label">管理基金净多</div><div class="kpi-value warn-text">139,004</div><div class="kpi-note">CFTC · 截止8月18日</div></div>
     </div>
+    <div class="notice info mt-3"><b>本次自动化试跑：</b>已调用本地 Market Data 插件。XAU/USD 最新公开报价为 4,604.399902 美元/盎司，来源 gold-api.com，源时间 2026-08-23 00:58:42 UTC，抓取时间约 00:59 UTC。插件不提供 XAU/USD 历史 OHLC，因此图表仍只展示已审计的历史现货日线，不新增或伪造周末K线。</div>
   </header>
 
   <div class="terminal-grid mt-3">
@@ -235,7 +236,7 @@
 
   <section id="audit" class="surface mt-3">
     <div class="panel-head"><div><div class="eyebrow">数据审计</div><h2 class="section-title mt-1">数据账本、时效与来源</h2><div class="section-note mt-1">缺口不隐藏：数据可以滞后，但不把旧数据冒充最新数据。</div></div><span class="tag tag-signal">核心价格数据完整</span></div>
-    <div class="panel-body"><div class="audit-grid"><div class="table-wrap"><table class="data-table"><thead><tr><th>指标</th><th>数值</th><th>截止日期</th><th>来源 / 说明</th></tr></thead><tbody><tr><td>XAU/USD现货OHLC</td><td>4,603.56 / 4,519.09 / 4,632.61 / 4,508.83</td><td>8月21日</td><td>Investing历史日线；0天滞后</td></tr><tr><td>实际收益率</td><td>2.40%</td><td>8月21日</td><td>美国财政部官方；与价格同日</td></tr><tr><td>就业</td><td>非农-2.3万，失业率4.1%</td><td>7月</td><td>BLS，8月7日发布；滞后14天</td></tr><tr><td>CPI</td><td>同比3.4%，核心2.5%</td><td>7月</td><td>BLS，8月12日发布；滞后9天</td></tr><tr><td>PCE / GDP</td><td>PCE3.7%，GDP1.5%</td><td>6月 / 二季度</td><td>BEA，7月30日发布；滞后22天</td></tr><tr><td>FedWatch</td><td>维持61%，加息39%</td><td>8月22日</td><td>Investing基于CME；二级页面</td></tr><tr><td>ETF流量</td><td>全球7月+$3bn</td><td>7月31日</td><td>世界黄金协会，8月6日发布；滞后21天</td></tr><tr><td>CFTC仓位</td><td>管理基金净多139,004</td><td>8月18日</td><td>CFTC，8月21日更新；只作仓位代理</td></tr></tbody></table></div><div><div class="source-list"><div class="source-item"><span>美联储声明 / 纪要</span><b>7月29日 / 8月19日</b></div><div class="source-item"><span>美国财政部实际收益率</span><b>8月21日</b></div><div class="source-item"><span>BLS CPI / 就业</span><b>8月12日 / 8月7日</b></div><div class="source-item"><span>BEA PCE / GDP</span><b>7月30日</b></div><div class="source-item"><span>世界黄金协会ETF / 央行</span><b>8月6日 / 8月4日</b></div><div class="source-item"><span>CFTC黄金仓位</span><b>8月21日更新</b></div></div><div class="notice info mt-3"><b>未纳入核心结论：</b>实时ETF日度净流量、XAU/USD现货期权链、全球美元流动性最新数值。原因是公开数据口径不统一或无法同频核验。</div></div></div></div>
+    <div class="panel-body"><div class="audit-grid"><div class="table-wrap"><table class="data-table"><thead><tr><th>指标</th><th>数值</th><th>截止日期</th><th>来源 / 说明</th></tr></thead><tbody><tr><td>XAU/USD现货最新公开报价</td><td>4,604.399902</td><td>2026-08-23 00:58:42 UTC</td><td>Market Data插件 → gold-api.com；抓取约00:59 UTC；公开报价，非可执行价</td></tr><tr><td>XAU/USD现货历史OHLC</td><td>4,603.56 / 4,519.09 / 4,632.61 / 4,508.83</td><td>8月21日</td><td>Investing历史日线；周五收盘，0天交易日滞后；插件不提供现货历史OHLC</td></tr><tr><td>实际收益率</td><td>2.40%</td><td>8月21日</td><td>美国财政部官方；与价格同日</td></tr><tr><td>就业</td><td>非农-2.3万，失业率4.1%</td><td>7月</td><td>BLS，8月7日发布；滞后14天</td></tr><tr><td>CPI</td><td>同比3.4%，核心2.5%</td><td>7月</td><td>BLS，8月12日发布；滞后9天</td></tr><tr><td>PCE / GDP</td><td>PCE3.7%，GDP1.5%</td><td>6月 / 二季度</td><td>BEA，7月30日发布；滞后22天</td></tr><tr><td>FedWatch</td><td>维持61%，加息39%</td><td>8月22日</td><td>Investing基于CME；二级页面</td></tr><tr><td>ETF流量</td><td>全球7月+$3bn</td><td>7月31日</td><td>世界黄金协会，8月6日发布；滞后21天</td></tr><tr><td>CFTC仓位</td><td>管理基金净多139,004</td><td>8月18日</td><td>CFTC，8月21日更新；只作仓位代理</td></tr></tbody></table></div><div><div class="source-list"><div class="source-item"><span>本次XAU/USD报价</span><b>gold-api.com · 8月23日 00:58 UTC</b></div><div class="source-item"><span>美联储声明 / 纪要</span><b>7月29日 / 8月19日</b></div><div class="source-item"><span>美国财政部实际收益率</span><b>8月21日</b></div><div class="source-item"><span>BLS CPI / 就业</span><b>8月12日 / 8月7日</b></div><div class="source-item"><span>BEA PCE / GDP</span><b>7月30日</b></div><div class="source-item"><span>世界黄金协会ETF / 央行</span><b>8月6日 / 8月4日</b></div><div class="source-item"><span>CFTC黄金仓位</span><b>8月21日更新</b></div></div><div class="notice info mt-3"><b>未纳入核心结论：</b>实时ETF日度净流量、XAU/USD现货期权链、全球美元流动性最新数值。原因是公开数据口径不统一或无法同频核验。辅助品种报价只能解释风险偏好或资金线索，不能改写XAU/USD现货技术结论。</div></div></div></div>
   </section>
 
   <section class="surface mt-3"><div class="panel-head"><div><div class="eyebrow">研究框架</div><h2 class="section-title mt-1">原始35模块索引</h2><div class="section-note mt-1">点击模块查看该模块在本报告中的结论，避免长文堆叠。</div></div><span class="tag tag-gold">事实 > 预期 > 仓位 > 流量 > 价格 > 叙事</span></div><div class="panel-body"><div id="moduleGrid" class="module-grid"></div><div id="moduleDetail" class="module-detail mt-3" aria-live="polite"><b>模块5 · 当前市场状态：</b>上行趋势中的加速阶段，但尚未完成资金与宏观共振确认。</div></div></section>
