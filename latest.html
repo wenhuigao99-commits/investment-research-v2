@@ -1,1174 +1,466 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黄金 XAUUSD 动态金融终端 · V9</title>
-<script>
-window.tailwind = window.tailwind || {};
-window.tailwind.config = {
-  theme: { extend: { colors: {
-    gold:'#C9A24B', golddeep:'#8A6D2F', ivory:'#FAF7F0', card:'#FFFFFF', ink:'#1F2937', sub:'#6B7280', line:'#E8E3D8',
-    bull:'#10B981', neu:'#F59E0B', bear:'#EF4444',
-  }}}
-}
-</script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-<style>
-  /* ===== 关键动画（固定，勿改） ===== */
-  @keyframes priceUp { 0%{background:#10B981;color:#fff;border-radius:4px;} 100%{background:transparent;color:inherit;} }
-  @keyframes priceDown { 0%{background:#EF4444;color:#fff;border-radius:4px;} 100%{background:transparent;color:inherit;} }
-  .px-up{animation:priceUp .6s ease-out;}
-  .px-down{animation:priceDown .6s ease-out;}
-  @keyframes breatheSlow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.55);}50%{opacity:.55;box-shadow:0 0 0 7px rgba(16,185,129,0);}}
-  @keyframes flashFast{0%,100%{opacity:1;}50%{opacity:.25;}}
-  @keyframes breatheMed{0%,100%{opacity:1;}50%{opacity:.5;}}
-  .lamp{width:11px;height:11px;border-radius:9999px;display:inline-block;flex:none;}
-  .lamp-bull{background:#10B981;animation:breatheSlow 2.2s ease-in-out infinite;}
-  .lamp-bear{background:#EF4444;animation:flashFast .8s ease-in-out infinite;}
-  .lamp-neu{background:#F59E0B;animation:breatheMed 1.7s ease-in-out infinite;}
-  .coll{max-height:0;overflow:hidden;transition:max-height .3s ease;}
-  .coll.open{max-height:3200px;}
-  .coll-toggle{cursor:pointer;user-select:none;}
-  .coll-toggle .chev{transition:transform .3s ease;display:inline-block;}
-  .coll-toggle.open .chev{transform:rotate(90deg);}
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;animation:fadeIn .3s ease;}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
-  .tab-btn{transition:all .2s ease;}
-  .panel{background:#FFFFFF;border:1px solid #E8E3D8;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-  .event-card{border:1px solid #E8E3D8;background:#FFFCF7;border-radius:9px;text-align:left;transition:all .2s ease;}
-  .event-card:hover,.event-card.active{border-color:#C9A24B;background:#FFF6E2;box-shadow:0 2px 8px rgba(125,92,25,.12);}
-  .event-card.active{box-shadow:inset 3px 0 0 #C9A24B,0 2px 8px rgba(125,92,25,.12);}
-  .event-kpi{border:1px solid #E8E3D8;background:#FFFCF7;border-radius:8px;padding:7px 8px;}
-  .event-kpi b{display:block;font-size:12px;color:#5B4312;}
-  .event-kpi span{display:block;color:#6B7280;font-size:10px;margin-bottom:2px;}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101820">
+  <title>Aurum Research Terminal — XAU/USD Demo</title>
+  <style>
+    :root{
+      --bg:#e9edf0;--paper:#fbfcfd;--paper-2:#f3f6f8;--ink:#17222d;--muted:#697786;
+      --line:#d3dbe2;--line-dark:#33414d;--navy:#101820;--navy-2:#182531;
+      --gold:#b58a35;--gold-soft:#f2ead4;--blue:#24679b;--blue-soft:#e7f0f7;
+      --red:#b94251;--red-soft:#f9e9ec;--green:#157b68;--green-soft:#e5f3ef;
+      --shadow:0 12px 30px rgba(20,34,46,.08);--radius:12px;
+      --display:Georgia,"Noto Serif SC","Songti SC",serif;
+      --body:"Microsoft YaHei UI","Noto Sans SC",Arial,sans-serif;
+      --mono:"IBM Plex Mono",Consolas,monospace;
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg);color:var(--ink);scroll-behavior:smooth}
+    body{margin:0;min-width:320px;font-family:var(--body);line-height:1.55;background:linear-gradient(180deg,#eef1f3 0,#e7ebee 100%)}
+    a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+    button{font:inherit;color:inherit}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8ab8d6;outline-offset:3px}
+    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+    .topbar{position:sticky;top:0;z-index:10;background:rgba(16,24,32,.96);color:#f3f5f6;border-bottom:1px solid #34424d;backdrop-filter:blur(14px)}
+    .topbar-inner{max-width:1480px;margin:auto;min-height:64px;padding:0 24px;display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:12px;min-width:245px}.brand-mark{width:34px;height:34px;display:grid;place-items:center;border:1px solid #d6b562;color:#f3d988;font-family:var(--display);font-size:20px}.brand strong{display:block;font-size:13px;letter-spacing:.05em}.brand small{display:block;color:#91a0ad;font-size:10px;margin-top:1px}
+    .topnav{display:flex;gap:6px;align-self:stretch}.topnav a{display:grid;place-items:center;padding:0 12px;color:#aab6c0;font-size:11px;border-bottom:2px solid transparent}.topnav a.active{color:#fff;border-color:#d4ad55}.topmeta{margin-left:auto;display:flex;align-items:center;gap:15px;color:#aab6c0;font-size:10px}.fresh{display:flex;align-items:center;gap:7px}.fresh i{width:7px;height:7px;border-radius:50%;background:#68c5a8;box-shadow:0 0 0 4px rgba(104,197,168,.12)}
+    .page{max-width:1480px;margin:auto;padding:24px 24px 56px}.eyebrow{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.headline{max-width:940px;margin:8px 0 0;font-family:var(--display);font-size:clamp(30px,4vw,56px);font-weight:400;line-height:1.06;letter-spacing:-.025em}.lede{max-width:790px;margin:13px 0 0;color:#536474;font-size:14px;line-height:1.75}
+    .hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(310px,.65fr);gap:16px;align-items:stretch}.hero-copy{padding:13px 0}.hero-aside{align-self:end;padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow)}.aside-kicker{color:var(--muted);font-size:10px}.aside-price{display:flex;align-items:baseline;gap:8px;margin-top:8px}.aside-price strong{font-size:35px;letter-spacing:-.05em}.aside-price span{color:var(--muted);font-size:11px}.aside-meta{display:flex;justify-content:space-between;gap:10px;margin-top:10px;color:var(--muted);font-size:10px}.aside-meta b{color:var(--ink)}
+    .decision-strip{display:grid;grid-template-columns:1.25fr repeat(4,1fr);margin-top:22px;border:1px solid var(--line-dark);border-radius:var(--radius);overflow:hidden;background:var(--navy);color:#fff;box-shadow:var(--shadow)}.decision-main{padding:18px 20px;background:linear-gradient(135deg,#172530,#101820)}.decision-main span,.metric span{display:block;color:#9dabb7;font-size:10px}.decision-main strong{display:block;margin-top:7px;color:#f0d37c;font-size:21px;line-height:1.25}.decision-main p{margin:8px 0 0;color:#c4cdd5;font-size:11px;line-height:1.6}.metric{padding:18px 14px;border-left:1px solid var(--line-dark)}.metric b{display:block;margin-top:7px;font-size:17px}.metric b.gold{color:#f0d37c}.metric b.red{color:#f28b98}.metric b.blue{color:#8ec3e6}.metric small{display:block;margin-top:5px;color:#8f9eaa;font-size:9px;line-height:1.45}
+    .thesis{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}.thesis-panel,.risk-panel{min-width:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow)}.panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 17px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700}.panel-title small{color:var(--muted);font-size:10px;font-weight:400}.thesis-body{padding:17px}.thesis-body blockquote{margin:0;padding:0 0 0 17px;border-left:1px solid var(--gold);font-family:var(--display);font-size:20px;line-height:1.45}.thesis-body p{margin:12px 0 0;color:#506171;font-size:12px;line-height:1.7}.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.tag{padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper-2);font-size:10px;color:#4f6070}.tag strong{color:var(--ink)}.risk-body{padding:14px 17px}.risk-item{display:grid;grid-template-columns:26px 1fr;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}.risk-item:last-child{border-bottom:0}.risk-item i{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:var(--red-soft);color:var(--red);font-style:normal;font-family:var(--mono);font-size:10px}.risk-item b{display:block;font-size:11px}.risk-item span{display:block;margin-top:2px;color:var(--muted);font-size:10px;line-height:1.5}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:34px 0 12px}.section-head h2{margin:0;font-family:var(--display);font-size:27px;font-weight:400;line-height:1.15}.section-head p{margin:0;color:var(--muted);font-size:11px;text-align:right}.evidence-grid{display:grid;grid-template-columns:1.55fr .75fr;gap:16px;align-items:start}.module-panel,.source-panel{min-width:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow)}.module-controls{display:flex;flex-wrap:wrap;gap:7px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--paper-2)}.module-controls button{min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);font-size:10px;cursor:pointer}.module-controls button.active{border-color:var(--navy);background:var(--navy);color:#fff}.module-list{padding:0 14px 14px}.module-group{padding-top:12px}.group-label{display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}.group-label::after{content:"";height:1px;flex:1;background:var(--line)}
+    details.module{border-top:1px solid var(--line)}details.module:first-of-type{border-top:0}details.module[hidden]{display:none}details.module summary{list-style:none;cursor:pointer;padding:12px 3px;display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:11px;align-items:center}details.module summary::-webkit-details-marker{display:none}.num{font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:700}.module-title{min-width:0}.module-title b{display:block;font-size:12px}.module-title span{display:block;margin-top:2px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{padding:4px 7px;border-radius:5px;font-size:9px;white-space:nowrap}.status.ok{color:var(--green);background:var(--green-soft)}.status.partial{color:#8d6717;background:var(--gold-soft)}.status.gap{color:var(--red);background:var(--red-soft)}details.module summary::after{content:"+";color:#83909b;font-family:var(--mono);font-size:14px;margin-left:3px}details.module[open] summary::after{content:"−"}.module-detail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 3px 14px 47px}.detail-cell{padding:10px 11px;background:var(--paper-2);border:1px solid var(--line);border-radius:7px}.detail-cell h3{margin:0;color:var(--gold);font-size:10px;letter-spacing:.04em}.detail-cell p{margin:5px 0 0;color:#435466;font-size:10px;line-height:1.65}.detail-cell.fact h3{color:var(--blue)}.detail-cell.infer h3{color:var(--green)}.detail-cell.gap h3{color:var(--red)}
+    .source-panel{position:sticky;top:86px}.source-body{padding:14px 17px}.source-note{padding:11px 12px;border:1px solid #e3d4ac;border-radius:7px;background:var(--gold-soft);color:#675323;font-size:10px;line-height:1.6}.source-list{margin:15px 0 0;padding:0;list-style:none}.source-list li{padding:10px 0;border-bottom:1px solid var(--line)}.source-list li:last-child{border-bottom:0}.source-list b{display:block;font-size:11px}.source-list span{display:block;margin-top:2px;color:var(--muted);font-size:9px}.source-list a{display:inline-block;margin-top:4px;font-size:9px}.quality-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:10px}.quality-table th,.quality-table td{padding:8px 0;border-bottom:1px solid var(--line);text-align:left}.quality-table th{color:var(--muted);font-weight:400}.quality-table td:last-child{text-align:right;font-family:var(--mono)}
+    .publish-gate{margin-top:14px;padding:12px;border:1px solid #d28d89;border-radius:8px;background:var(--red-soft);color:#7d3437;font-size:10px;line-height:1.6}.publish-gate.ready{border-color:#9fbea5;background:#edf6ed;color:#2f653e}.publish-gate-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.publish-gate-head b{font-size:11px}.publish-gate-head span{padding:3px 6px;border-radius:4px;background:#b34c4d;color:#fff;font:9px var(--mono);letter-spacing:.05em}.publish-gate.ready .publish-gate-head span{background:#368052}.publish-gate p{margin:7px 0 0}.publish-gate ul{margin:7px 0 0;padding-left:17px}.publish-gate li{margin-top:3px}.publish-gate small{display:block;margin-top:8px;color:#9d5651;font-size:9px}.publish-gate.ready small{color:#487856}.gate-stack{display:grid;gap:8px}
+    .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.scenario-list{padding:14px 17px}.scenario{display:grid;grid-template-columns:74px 1fr;gap:13px;padding:12px 0;border-bottom:1px solid var(--line)}.scenario:last-child{border-bottom:0}.scenario-label{font-size:11px;font-weight:700}.scenario-label.bull{color:var(--green)}.scenario-label.base{color:var(--gold)}.scenario-label.bear{color:var(--red)}.scenario p{margin:0;color:#4f6070;font-size:10px;line-height:1.65}.scenario p strong{color:var(--ink)}.presentation-hidden{display:none!important}.dashboard{padding:14px 17px}.dash-row{display:grid;grid-template-columns:1.2fr .9fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:10px}.dash-row:last-child{border-bottom:0}.dash-row span{color:var(--muted)}.dash-row b{font-family:var(--mono);font-size:10px}.direction{justify-self:end;padding:4px 6px;border-radius:5px;font-size:9px}.direction.up{color:var(--green);background:var(--green-soft)}.direction.down{color:var(--red);background:var(--red-soft)}.direction.neutral{color:#7a5c19;background:var(--gold-soft)}
+    .footer{display:flex;justify-content:space-between;gap:16px;margin-top:24px;padding:15px 17px;border-radius:var(--radius);background:var(--navy);color:#dbe3e8;font-size:10px}.footer span{color:#9eabb5}.footer b{color:#f0d37c;font-weight:500}
+    @media(max-width:1080px){.hero,.thesis,.evidence-grid,.bottom-grid{grid-template-columns:1fr}.hero-aside{max-width:500px}.source-panel{position:static}.decision-strip{grid-template-columns:1.3fr repeat(2,1fr)}.decision-strip .metric:nth-last-child(-n+2){border-top:1px solid var(--line-dark)}.decision-main{grid-row:span 2}}
+    @media(max-width:720px){.topbar-inner{padding:0 14px;gap:10px}.brand{min-width:auto}.brand small,.topnav,.topmeta .fresh{display:none}.topmeta{margin-left:auto}.page{padding:18px 14px 40px}.headline{font-size:37px}.lede{font-size:13px}.decision-strip{grid-template-columns:1fr 1fr}.decision-main{grid-column:1/-1;grid-row:auto}.metric{border-top:1px solid var(--line-dark)}.thesis-body blockquote{font-size:18px}.section-head{display:block}.section-head p{margin-top:6px;text-align:left}.module-detail{grid-template-columns:1fr;padding-left:47px}.module-title span{white-space:normal}.source-panel{box-shadow:none}.footer{display:block}.footer span{display:block;margin-top:5px}}
+    @media(max-width:430px){.brand strong{font-size:11px}.aside-price strong{font-size:30px}.decision-main strong{font-size:18px}.metric{padding:14px 11px}.metric b{font-size:14px}.module-list{padding-left:9px;padding-right:9px}details.module summary{grid-template-columns:28px minmax(0,1fr);gap:8px}.status{grid-column:2;justify-self:start}.module-detail{padding-left:36px}.module-title b{font-size:11px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+    /* v2 demo pass: make the reasoning chain visible before the evidence ledger. */
+    :root{--bg:#ded8ce;--paper:#fffdf8;--paper-2:#f4efe6;--ink:#18232b;--muted:#66747b;--line:#d6cec0;--navy:#0d1a20;--navy-2:#14272e;--gold:#b5832f;--gold-soft:#f4ead1;--blue:#1e6b92;--blue-soft:#e3f0f4;--red:#b34c4d;--red-soft:#fae6e0;--green:#187968;--green-soft:#e4f2eb;--shadow:0 18px 42px rgba(28,33,36,.12);--radius:14px}
+    body{background:linear-gradient(180deg,#e8e2d8 0,#dcd6cc 100%);color:var(--ink)}
+    .topbar-inner{max-width:1540px;min-height:58px}
+    .page{max-width:1540px;padding:20px 28px 64px}
+    .hero{position:relative;grid-template-columns:minmax(0,1.05fr) minmax(420px,.95fr);gap:28px;min-height:420px;padding:34px 38px;border:1px solid #263c43;border-radius:18px;background:radial-gradient(circle at 84% 20%,rgba(215,176,81,.16),transparent 29%),linear-gradient(135deg,#112229 0,#0b171c 70%);box-shadow:0 22px 55px rgba(13,26,32,.24);overflow:hidden}
+    .hero::after{content:"";position:absolute;inset:auto -8% -55% 38%;height:70%;border-top:1px solid rgba(218,181,92,.34);transform:rotate(-9deg);pointer-events:none}
+    .hero-copy{position:relative;z-index:1;align-self:center;padding:0;color:#f7f1e6}
+    .hero .eyebrow{display:none}
+    .headline{max-width:780px;margin:0;color:#fff8ea;font-size:clamp(40px,5.2vw,76px);letter-spacing:-.035em;line-height:1.02}
+    .lede{max-width:700px;margin:22px 0 0;color:#bcc9ca;font-size:15px;line-height:1.8}
+    .hero-aside{position:relative;z-index:1;align-self:stretch;display:flex;flex-direction:column;justify-content:space-between;padding:22px 24px;border:1px solid #40545a;border-radius:12px;background:rgba(18,38,45,.78);box-shadow:none;color:#f8f0df}
+    .aside-kicker{color:#d9b96c;letter-spacing:.13em;font-size:10px;font-weight:700}
+    .aside-price{margin-top:18px}.aside-price strong{color:#fff6dc;font-size:54px}.aside-price span{color:#acb9bb}
+    .aside-meta{margin-top:12px;color:#aebcbe}.aside-meta b{color:#fff0c9}
+    .range-map{margin-top:22px;padding-top:18px;border-top:1px solid rgba(218,181,92,.22)}
+    .range-head{display:flex;justify-content:space-between;gap:12px;color:#9eadaf;font-size:10px}.range-head b{color:#f1d58e;font-weight:500}
+    .range-track{position:relative;height:18px;margin:16px 0 9px;background:linear-gradient(90deg,#8e474b 0 35%,#a78b51 35% 62%,#2e806d 62% 100%);border-radius:999px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+    .range-track::before,.range-track::after{content:"";position:absolute;top:-7px;height:32px;width:1px;background:#f9e7ae}.range-track::before{left:35%}.range-track::after{left:62%}
+    .range-marker{position:absolute;left:62%;top:-7px;width:3px;height:32px;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12)}.range-marker::after{content:"4,430.06";position:absolute;top:-22px;left:-25px;color:#fff;font:10px var(--mono);white-space:nowrap}
+    .range-labels{display:flex;justify-content:space-between;color:#9eadaf;font:9px var(--mono)}.range-labels b{color:#f2d687;font-weight:500}
+    .hero-stamp{display:flex;align-items:center;gap:8px;margin-top:20px;color:#9eadaf;font-size:10px}.hero-stamp i{width:7px;height:7px;border-radius:50%;background:#6bc3a8;box-shadow:0 0 0 4px rgba(107,195,168,.12)}
+    .decision-strip{grid-template-columns:1.45fr repeat(4,1fr);margin-top:18px;border-radius:12px;box-shadow:0 14px 34px rgba(13,26,32,.2)}
+    .decision-main strong{font-size:24px}.metric{padding:18px 16px}.metric b{font-size:18px}
+    .thesis{margin-top:18px}.thesis-body blockquote{font-size:23px;line-height:1.4}.thesis-body p{font-size:13px}
+    .section-head{margin:40px 0 14px}.section-head h2{font-size:32px}.section-head p{max-width:430px;font-size:12px;line-height:1.6}
+    .section-head .eyebrow{display:none}
+
+    .readout-grid{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(320px,.58fr);gap:18px;margin-top:18px}
+    .readout-main,.readout-side{border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow)}
+    .readout-main{padding:25px 27px 24px}.readout-side{padding:23px 22px;background:#13252c;color:#eef1eb;border-color:#29424a}
+    .readout-title{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.readout-title h2{margin:0;font-family:var(--display);font-size:28px;font-weight:400;line-height:1.15}.readout-title p{max-width:270px;margin:2px 0 0;color:var(--muted);font-size:11px;text-align:right;line-height:1.6}.readout-badge{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border:1px solid #d9bd7b;border-radius:999px;color:#87651e;background:var(--gold-soft);font:10px var(--mono);white-space:nowrap}
+    .logic-chain{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:26px 0 24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .logic-node{position:relative;min-height:118px;padding:16px 14px 14px;border-right:1px solid var(--line)}.logic-node:last-child{border-right:0}.logic-node::after{content:"→";position:absolute;right:-10px;top:43px;z-index:1;width:19px;height:19px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--gold);font:11px var(--mono)}.logic-node:last-child::after{display:none}.logic-node span{display:block;color:var(--gold);font:10px var(--mono);letter-spacing:.08em}.logic-node b{display:block;margin-top:9px;font-size:13px}.logic-node p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.55}.logic-node.active{background:#fbf4df}.logic-node.active b{color:#815e17}
+    .reasoning-copy{display:grid;grid-template-columns:1fr 1fr;gap:20px}.reasoning-copy p{margin:0;color:#40505a;font-size:13px;line-height:1.8}.reasoning-copy p:last-child{grid-column:1/-1;padding-top:15px;border-top:1px solid var(--line);font-size:14px}.reasoning-copy strong{color:var(--ink)}
+    .readout-side h3{margin:0;font-family:var(--display);font-size:24px;font-weight:400;color:#fff5dc}.readout-side > p{margin:7px 0 17px;color:#aebfc0;font-size:11px;line-height:1.6}.threshold{padding:14px 0;border-top:1px solid #315059}.threshold:last-of-type{border-bottom:1px solid #315059}.threshold-row{display:flex;justify-content:space-between;gap:12px}.threshold b{font-size:12px}.threshold em{font-style:normal;font:10px var(--mono);color:#e5cb82}.threshold p{margin:5px 0 0;color:#aebfc0;font-size:10px;line-height:1.55}.threshold.confirm b{color:#75cfb0}.threshold.invalidate b{color:#ef9b94}.signal-conflict{margin-top:18px;padding:12px;border:1px solid #6d5a35;border-radius:8px;background:#2a2b25;color:#e9d29a;font-size:10px;line-height:1.65}
+
+    .deep-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}.deep-card{position:relative;padding:20px 21px 18px;border:1px solid var(--line);border-radius:12px;background:rgba(255,253,248,.9);box-shadow:0 9px 22px rgba(28,33,36,.07)}.deep-card::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:3px;background:var(--gold)}.deep-card.blue::before{background:var(--blue)}.deep-card.red::before{background:var(--red)}.deep-card.green::before{background:var(--green)}.deep-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.deep-card h3{margin:0;font-size:15px}.deep-card small{color:var(--muted);font:9px var(--mono)}.deep-card p{margin:10px 0 0;color:#40505a;font-size:12px;line-height:1.75}.deep-card p + p{margin-top:8px}.deep-card .takeaway{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);color:var(--ink);font-size:11px}.deep-card .takeaway b{color:var(--gold)}
+    .thesis-body blockquote{border-left-width:1px}
+    .deep-card::before{display:none}
+    .mechanism-section{margin-top:20px}.mechanism-shell{border-radius:14px;background:var(--navy);color:#eef2ed;box-shadow:0 18px 42px rgba(13,26,32,.2);overflow:hidden}.mechanism-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:22px 25px 18px;border-bottom:1px solid #2e4850}.mechanism-head h2{margin:0;font-family:var(--display);font-size:29px;font-weight:400;color:#fff4d8}.mechanism-head p{max-width:440px;margin:0;color:#aebfc0;font-size:11px;line-height:1.65;text-align:right}.mechanism-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);gap:0}.mechanism-main{padding:24px 25px 25px}.mechanism-kicker{color:#d8b86a;font:10px var(--mono);letter-spacing:.1em}.mechanism-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:16px;border-top:1px solid #2e4850;border-bottom:1px solid #2e4850}.flow-step{position:relative;min-height:127px;padding:16px 13px 14px;border-right:1px solid #2e4850}.flow-step:last-child{border-right:0}.flow-step:not(:last-child)::after{content:"→";position:absolute;right:-8px;top:52px;z-index:1;color:#d8b86a;font:12px var(--mono)}.flow-step span{display:block;color:#8fa7a9;font:9px var(--mono)}.flow-step b{display:block;margin-top:10px;color:#fff4d8;font-size:13px}.flow-step p{margin:6px 0 0;color:#aebfc0;font-size:10px;line-height:1.55}.flow-step.highlight{background:rgba(201,160,66,.12)}.flow-step.highlight b{color:#f0cf81}.mechanism-reading{margin-top:20px;padding:17px 18px;border:1px solid #3d5960;background:#172d34}.mechanism-reading h3{margin:0;color:#fff4d8;font-size:14px}.mechanism-reading p{margin:10px 0 0;color:#c1cfce;font-size:12px;line-height:1.8}.mechanism-reading strong{color:#f0cf81}.mechanism-side{padding:24px 24px 25px;border-left:1px solid #2e4850;background:#112229}.mechanism-side h3{margin:0;color:#fff4d8;font-family:var(--display);font-size:23px;font-weight:400}.mechanism-side > p{margin:7px 0 17px;color:#aebfc0;font-size:10px;line-height:1.6}.asset-matrix{width:100%;border-collapse:collapse;font-size:10px}.asset-matrix th,.asset-matrix td{padding:11px 0;border-bottom:1px solid #2e4850;text-align:left;vertical-align:top}.asset-matrix th{color:#7f999c;font-weight:400}.asset-matrix td:nth-child(2){padding-right:10px;color:#eef2ed;font-family:var(--mono);font-size:9px}.asset-matrix td:nth-child(3){color:#b7c8c7;line-height:1.5}.asset-matrix .signal{display:inline-flex;align-items:center;gap:6px;color:#e9d18b;font:10px var(--mono);white-space:nowrap}.asset-matrix .signal::before{content:"";width:7px;height:7px;border-radius:50%;background:#d8b86a}.asset-matrix .signal.headwind{color:#ef9e96}.asset-matrix .signal.headwind::before{background:#c95f61}.asset-matrix .signal.support{color:#76cfac}.asset-matrix .signal.support::before{background:#5db992}.matrix-foot{margin-top:15px;color:#7f999c;font-size:9px;line-height:1.6}.reaction-block{margin-top:18px;padding:0 25px 25px}.reaction-block h3{margin:0 0 12px;color:#fff4d8;font-size:13px}.reaction-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}.reaction-row{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px 0;border-top:1px solid #2e4850}.reaction-row b{color:#d8b86a;font-size:10px}.reaction-row span{color:#b7c8c7;font-size:10px;line-height:1.55}.reaction-row strong{color:#eef2ed;font-weight:500}
+    .module-panel,.source-panel{border-radius:12px}.module-controls{padding:11px 14px;position:sticky;top:58px;z-index:2}.module-controls button{border-radius:999px;padding:0 12px}.module-list{padding:0 16px 18px}.group-label{padding-top:18px}.module-title b{font-size:13px}.module-title span{font-size:11px;white-space:normal;line-height:1.45}.module-detail{padding-bottom:18px}.detail-cell{padding:12px 13px}.detail-cell p{font-size:11px;line-height:1.75}.source-panel{top:78px}.bottom-grid{margin-top:6px}.scenario p{font-size:11px;line-height:1.75}.dashboard{padding:14px 19px}.dash-row{padding:12px 0}.footer{margin-top:30px}
+    @media(max-width:1050px){.hero{grid-template-columns:1fr}.hero-aside{max-width:620px}.decision-strip{grid-template-columns:1.4fr repeat(2,1fr)}.decision-main{grid-row:span 2}.readout-grid{grid-template-columns:1fr}.readout-side{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}.readout-side h3,.readout-side > p,.signal-conflict{grid-column:1/-1}.threshold:nth-of-type(odd){padding-right:14px}.threshold:nth-of-type(even){padding-left:14px;border-left:1px solid #315059}.mechanism-body{grid-template-columns:1fr}.mechanism-side{border-top:1px solid #2e4850;border-left:0}}
+    @media(max-width:700px){.page{padding:12px 12px 38px}.topbar-inner{padding:0 14px}.topnav{display:none}.topmeta{font-size:9px}.topmeta .mono{display:none}.hero{min-height:0;padding:24px 20px 20px;border-radius:13px}.headline{font-size:42px}.lede{font-size:13px;line-height:1.7;margin-top:16px}.hero-aside{margin-top:10px;padding:18px 16px}.aside-price strong{font-size:43px}.range-head{display:block}.range-head b{display:block;margin-top:4px}.decision-strip{grid-template-columns:1fr 1fr;margin-top:12px}.decision-main{grid-column:1/-1;grid-row:auto}.metric{min-height:100px}.thesis{grid-template-columns:1fr}.thesis-body blockquote{font-size:20px}.section-head{display:block;margin-top:32px}.section-head h2{font-size:27px}.section-head p{margin-top:7px;text-align:left}.readout-main{padding:20px 17px}.readout-title{display:block}.readout-title p{max-width:none;margin-top:8px;text-align:left}.logic-chain{grid-template-columns:1fr 1fr}.logic-node:nth-child(2){border-right:0}.logic-node:nth-child(-n+2){border-bottom:1px solid var(--line)}.logic-node::after{display:none}.reasoning-copy{grid-template-columns:1fr}.reasoning-copy p:last-child{grid-column:auto}.readout-side{display:block;padding:20px 17px}.threshold:nth-of-type(even){padding-left:0;border-left:0}.deep-grid{grid-template-columns:1fr}.evidence-grid{grid-template-columns:1fr}.source-panel{position:static}.module-controls{position:static;overflow:auto;flex-wrap:nowrap}.module-controls button{flex:0 0 auto}.module-detail{grid-template-columns:1fr;padding-left:3px}.mechanism-head{display:block;padding:19px 17px 16px}.mechanism-head p{max-width:none;margin-top:8px;text-align:left}.mechanism-main{padding:20px 17px}.mechanism-flow{grid-template-columns:1fr 1fr}.flow-step{min-height:116px}.flow-step:nth-child(2),.flow-step:nth-child(4){border-right:0}.flow-step:nth-child(-n+3){border-bottom:1px solid #2e4850}.flow-step:not(:last-child)::after{display:none}.mechanism-reading{padding:15px}.mechanism-side{padding:20px 17px}.reaction-block{padding:0 17px 20px}.reaction-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}.footer{display:block}.footer span{display:block;margin-top:8px}}
+    /* Event study and factor-conviction workbench: evidence carries the visual weight. */
+    .research-lab{margin-top:34px}.lab-shell{border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);overflow:hidden}.lab-head{display:flex;align-items:end;justify-content:space-between;gap:20px;padding:22px 24px 17px;border-bottom:1px solid var(--line);background:linear-gradient(110deg,#fffdf8,#f5f0e5)}.lab-head h2{margin:0;font-family:var(--display);font-size:29px;font-weight:400}.lab-head p{max-width:500px;margin:0;color:var(--muted);font-size:11px;line-height:1.65;text-align:right}.lab-meta{display:inline-flex;align-items:center;gap:7px;color:#6d7d88;font:9px var(--mono)}.lab-meta::before{content:"";width:7px;height:7px;border-radius:50%;background:#d3a54f}.event-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr)}.spot-panel{padding:22px 24px 24px}.curve-panel{padding:22px 24px 24px;border-left:1px solid var(--line);background:#fbf9f3}.subhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.subhead h3{margin:0;color:var(--ink);font-size:15px}.subhead span{color:var(--muted);font:9px var(--mono);text-align:right}.chart-frame{margin-top:16px;padding:12px 0 0;border-top:1px solid var(--line)}.spot-chart{display:block;width:100%;height:auto;min-height:280px}.event-rail{display:flex;gap:7px;overflow:auto;margin-top:13px;padding-bottom:2px}.event-selector{flex:0 0 auto;min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:#fffdf8;color:#586975;font:9px var(--mono);cursor:pointer}.event-selector.active,.event-selector:hover{border-color:var(--navy);background:var(--navy);color:#fff}.event-reading{min-height:135px;margin-top:14px;padding:14px 0 0;border-top:1px solid var(--line)}.event-reading strong{display:block;color:var(--gold);font-size:12px}.event-reading p{margin:7px 0 0;color:#485966;font-size:11px;line-height:1.7}.event-reading .evidence-state{display:inline-block;margin-top:8px;color:#9a403e;font:9px var(--mono)}.curve-svg{display:block;width:100%;height:auto;margin:15px 0 8px}.curve-read{padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.curve-read b{display:block;color:#243a44;font-size:13px}.curve-read p{margin:7px 0 0;color:#52616b;font-size:11px;line-height:1.72}.curve-facts{margin:14px 0 0;padding:0;list-style:none}.curve-facts li{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:10px;line-height:1.55}.curve-facts b{color:#71818d;font:9px var(--mono)}.curve-facts span{color:#40515d}.curve-facts .gap-copy{color:#a24846}.lab-foot{padding:13px 24px;border-top:1px solid var(--line);background:#faf8f2;color:#71808a;font-size:9px;line-height:1.6}.driver-layout{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.15fr);gap:0}.driver-visual{padding:22px 24px 24px;border-right:1px solid var(--line);background:#fbfaf6}.driver-copy{padding:22px 24px 24px}.horizon-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.horizon-tabs button{min-height:32px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:#fffdf8;color:#62717d;font-size:10px;cursor:pointer}.horizon-tabs button.active{border-color:var(--navy);background:var(--navy);color:#fff}.radar-wrap{position:relative;max-width:410px;margin:8px auto 0}.radar-chart{display:block;width:100%;height:auto}.radar-legend{display:flex;justify-content:center;gap:13px;margin-top:1px;color:#667783;font-size:10px}.radar-legend span{display:inline-flex;align-items:center;gap:6px}.radar-legend i{width:10px;height:10px;border-radius:3px;background:#19a77a}.radar-legend i.bear{background:#df5e5c}.score-note{max-width:410px;margin:9px auto 0;color:#74828b;font-size:9px;line-height:1.55;text-align:center}.driver-chains{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}.driver-chain{padding-top:13px;border-top:2px solid #1aa979}.driver-chain.bear{border-color:#d95b59}.driver-chain h3{margin:0;color:#16785b;font-size:13px}.driver-chain.bear h3{color:#b54947}.driver-chain p{margin:8px 0 0;color:#4c5c66;font-size:11px;line-height:1.75}.driver-chain ul{margin:10px 0 0;padding:0;list-style:none}.driver-chain li{padding:7px 0;border-top:1px solid var(--line);color:#53636d;font-size:10px;line-height:1.5}.driver-chain li b{display:inline-block;min-width:27px;color:#168461;font:9px var(--mono)}.driver-chain.bear li b{color:#bc4948}.attention-row{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}.attention-row h3{margin:0;color:#445461;font-size:12px}.attention-row p{margin:5px 0 0;color:#73818a;font-size:9px;line-height:1.55}.attention-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}.attention-cell{padding:9px 0;border-top:1px solid var(--line)}.attention-cell span{display:block;color:#77858e;font-size:9px}.attention-cell b{display:block;margin-top:4px;color:#1c3540;font:14px var(--mono)}.attention-cell em{color:#87939a;font-size:9px;font-style:normal}.research-lab a{color:#315e78;text-underline-offset:2px}
+    @media(max-width:700px){.research-lab{margin-top:30px}.lab-head{display:block;padding:19px 17px 15px}.lab-head p{max-width:none;margin-top:8px;text-align:left}.event-layout,.driver-layout{grid-template-columns:1fr}.spot-panel,.curve-panel,.driver-visual,.driver-copy{padding:20px 17px}.curve-panel,.driver-visual{border-left:0;border-right:0;border-top:1px solid var(--line)}.lab-foot{padding:12px 17px}.driver-chains{grid-template-columns:1fr;gap:14px}.attention-grid{grid-template-columns:repeat(2,1fr)}.spot-chart{min-height:235px}.curve-svg{margin-top:12px}}
+    .chart-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:14px}.chart-toolbar button,.chart-toolbar select,.chart-toolbar output{min-height:30px;padding:0 9px;border:1px solid var(--line);border-radius:6px;background:#fffdf8;color:#586975;font:9px var(--mono)}.chart-toolbar button{cursor:pointer}.chart-toolbar button:hover,.chart-toolbar button:focus-visible,.chart-toolbar button.active{border-color:var(--navy);background:var(--navy);color:#fff}.chart-toolbar output{display:inline-flex;align-items:center;margin-left:auto;border-color:transparent;background:transparent;color:var(--muted)}.chart-toolbar .drag-note{width:100%;color:var(--muted);font-size:9px}.spot-chart{touch-action:none;cursor:grab}.spot-chart.is-dragging{cursor:grabbing}.event-marker{cursor:pointer;pointer-events:all}.event-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px;padding:10px;background:#faf8f2;border:1px solid var(--line);border-radius:8px}.event-controls label{display:flex;flex-direction:column;gap:5px;color:var(--muted);font-size:9px}.event-controls select,.event-controls input{min-height:31px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:#fffdf8;color:var(--ink);font-size:10px}.event-count{margin-top:8px;color:var(--muted);font:9px var(--mono)}.event-rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:205px;overflow:auto;padding:8px 0 3px}.event-selector{min-width:0;min-height:42px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fffdf8;color:#586975;font:9px var(--mono);text-align:left;cursor:pointer}.event-selector strong{display:block;color:inherit;font-size:10px}.event-selector small{display:block;margin-top:4px;color:var(--muted);font-size:8px}.event-selector.active,.event-selector:hover,.event-selector:focus-visible{border-color:var(--navy);background:var(--navy);color:#fff}.event-selector.active small,.event-selector:hover small,.event-selector:focus-visible small{color:#d8e2e4}.event-empty{grid-column:1/-1;padding:18px 10px;color:var(--muted);font-size:10px;text-align:center}
+    .chart-frame{position:relative}.chart-tooltip{position:absolute;z-index:4;min-width:205px;padding:10px 11px;border:1px solid #3b535b;border-radius:8px;background:rgba(13,26,32,.96);box-shadow:0 12px 24px rgba(13,26,32,.18);color:#eef2ed;font-size:10px;line-height:1.55;pointer-events:none}.chart-tooltip[hidden]{display:none}.chart-tooltip strong{display:block;margin-bottom:5px;color:#f0cf81;font:11px var(--mono)}.chart-tooltip .ohlc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px}.chart-tooltip b{color:#fff}.chart-tooltip span{color:#b9c9c7}.candle-hit{cursor:crosshair;pointer-events:all}.candle-hit:focus{outline:none}.ma-legend{display:inline-flex;align-items:center;gap:10px;margin-left:5px;color:var(--muted);font:9px var(--mono)}.ma-legend i{display:inline-flex;align-items:center;gap:4px;font-style:normal}.ma-legend i::before{content:"";width:16px;height:2px;background:currentColor}.ma-legend .ma5{color:#b5832f}.ma-legend .ma10{color:#24679b}.ma-legend .ma20{color:#8b5b7a}.bottom-grid{grid-template-columns:1fr}.mobile-jump{display:none}.candle-inspector{display:none}
+    @media(max-width:700px){.mobile-jump{display:flex;align-items:center;gap:6px;margin-left:auto;color:#d8e2e4;font:9px var(--mono)}.mobile-jump select{max-width:92px;min-height:28px;padding:0 5px;border:1px solid #51636b;border-radius:5px;background:#172a32;color:#f3ead4;font-size:10px}.candle-inspector{display:block;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#faf8f2;color:#5b6b74;font-size:10px;line-height:1.55}.candle-inspector strong{color:var(--gold);font-family:var(--mono)}.candle-inspector .ohlc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 10px;margin-top:4px}.candle-inspector b{color:var(--ink);font-family:var(--mono);font-weight:500}.chart-toolbar output{margin-left:0}.ma-legend{margin-left:0}.event-rail{max-height:240px}}
+  </style>
 </head>
-<body class="bg-ivory text-ink font-sans" style="font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.7;">
-
-<!--
-====================================================================
-  黄金 XAUUSD 动态金融终端 · CODE 复刻模板（数据驱动版）
-====================================================================
-  如何使用：
-  1. 本文件是「界面框架 + 数据注入层」合二为一。结构、CSS、交互已锁定。
-  2. 你（Codex / 任何 LLM）只需修改文件底部 script 内的 const DATA 对象（见下方「DATA 数据注入层」注释）。
-  3. 把 DATA 里的示例（基于 2026-08-24）替换为你找到的新数据，页面会自动重绘。
-  4. 切勿改动 HTML 骨架（body 内各容器 id）与本文件 CSS —— 否则会破坏布局。
-  5. DATA 文本字段支持极少量 HTML：<b>加粗</b>、<br>换行；需要显示「<」请写 &lt;。
-  6. 数据来源/截止时间请如实填写 meta 字段；缺口请在该字段显式标注「⚠️数据缺口」。
-  交付前请对 inline JS 做语法校验（node --check 或等价），通过再分发。
-====================================================================
--->
-
-<!-- ============ 顶部 Header（模块一 数据基准 + 视觉规范） ============ -->
-<header class="max-w-[1400px] mx-auto px-4 pt-6 pb-2">
-  <div class="flex flex-wrap items-end justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight" style="color:#5B4312;">黄金 XAUUSD 动态金融终端</h1>
-      <p class="text-sm" style="color:#6B7280;" id="meta-sub"></p>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><div class="brand-mark">Au</div><div><strong>AURUM RESEARCH</strong><small>XAU/USD · EVIDENCE TERMINAL · DEMO</small></div></div>
+      <nav class="topnav" aria-label="页面导航"><a class="active" href="#decision">决策</a><a href="#mechanism">机制</a><a href="#event-lab">事件</a><a href="#driver-lab">权重</a><a href="#modules">35 模块</a></nav>
+      <label class="mobile-jump" for="mobile-section-jump"><span>跳转</span><select id="mobile-section-jump" aria-label="跳转到报告模块"><option value="#decision">决策</option><option value="#mechanism">机制</option><option value="#event-lab">事件</option><option value="#driver-lab">权重</option><option value="#modules">35模块</option></select></label>
+      <div class="topmeta"><span class="fresh"><i></i>报告核验至 21:41 UTC</span><span class="mono">2026.09.05 · 周五收盘版</span></div>
     </div>
-    <div class="text-right text-xs" style="color:#6B7280;">
-      <div id="meta-deadline"></div>
-      <div class="mt-1">
-        <span class="inline-flex items-center"><span class="lamp lamp-bull mr-1"></span>确认/支撑/利多</span>
-        <span class="inline-flex items-center ml-2"><span class="lamp lamp-neu mr-1"></span>观察/需验证</span>
-        <span class="inline-flex items-center ml-2"><span class="lamp lamp-bear mr-1"></span>风险/失效/利空</span>
+  </header>
+
+  <main class="page">
+    <section class="hero" id="decision" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <div class="eyebrow">35-module gold research · text-first visualization</div>
+        <h1 class="headline" id="page-title">非农先打击黄金，随后出现相对承接；趋势尚未重新确认。</h1>
+        <p class="lede">9/4 非农先触发近端政策路径重估，XAU/USD 事件小时最大回撤约 2.22%，随后收复约 68.8%；但周五仍收跌约 0.98%。黄金比 BTC 修复更强，却不能仅凭价格把反弹命名为避险买盘。</p>
       </div>
-    </div>
-  </div>
-  <!-- KPI 价格条（由 DATA.kpi 渲染） -->
-  <div id="kpi-bar" class="grid grid-cols-3 md:grid-cols-6 gap-2 mt-4"></div>
-</header>
-
-<!-- ============ 三栏仪表盘 ============ -->
-<div class="max-w-[1400px] mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
-
-  <!-- ============ 左栏 25% ============ -->
-  <aside class="lg:col-span-1 space-y-4 lg:sticky lg:top-4">
-
-    <!-- 模块二 Executive Summary -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold flex items-center gap-2" style="color:#5B4312;"><span class="lamp lamp-bull"></span>🎯 Executive Summary</h2>
-      <div id="exec-body" class="mt-2 space-y-2 text-[13px]"></div>
+      <aside class="hero-aside" aria-label="现货价格摘要"><div><div class="aside-kicker">XAU/USD SPOT · FRIDAY CLOSE</div><div class="aside-price"><strong class="mono">4,430.06</strong><span>USD / oz</span></div><div class="aside-meta"><span>较 9/3 收盘 <b class="mono">−0.98%</b></span><span>日内振幅 <b class="mono">145.58</b></span></div><div class="aside-meta"><span>源时间 <b>2026-09-04 21:41 UTC</b></span><span>非可执行价</span></div></div><div class="range-map"><div class="range-head"><span>现货状态带</span><b>事件后修复，尚未回到确认区</b></div><div class="range-track"><span class="range-marker"></span></div><div class="range-labels"><span>4,283 <b>Bear</b></span><span>4,383 <b>Support</b></span><span>4,466 <b>Confirm</b></span><span>4,520+</span></div></div><div class="hero-stamp"><i></i><span>数据可用性：周五完整日线已核验 · 小时尾点另行标注</span></div></aside>
     </section>
 
-    <!-- 模块八 失效条件 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">⚠️ 失效条件</h2>
-      <ul id="fail-body" class="mt-2 space-y-1.5 text-[12.5px]"></ul>
+    <section class="decision-strip" aria-label="核心决策指标">
+      <div class="decision-main"><span>当前交易状态</span><strong>Neutral · 事件后修复未确认</strong><p>等待 4,449—4,466 上方完整日线确认，同时观察实际收益率与美元是否重新形成逆风。</p></div>
+      <div class="metric"><span>10Y 实际收益率</span><b class="red mono">2.42%</b><small>9/3 官方日终<br>仍是黄金机会成本逆风</small></div>
+      <div class="metric"><span>政策定价</span><b class="red mono">未核验</b><small>本版不沿用旧概率<br>不等同于研究概率</small></div>
+      <div class="metric"><span>全球 ETF · 7月</span><b class="blue mono">+$3bn</b><small>结构性支持<br>北美 YTD 仍净流出</small></div>
+      <div class="metric"><span>近期收盘结构</span><b class="gold mono">4,383 / 4,466</b><small>近端支撑 / 关键确认位<br>9/4 收盘仍在确认区下方</small></div>
     </section>
 
-    <!-- 模块九 最终判断 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">🏁 最终判断</h2>
-      <div id="final-body" class="mt-2 space-y-2 text-[13px]"></div>
+    <section class="thesis" aria-label="核心假设与失效条件">
+      <article class="thesis-panel">
+        <div class="panel-title">核心交易假设 <small>Facts → Expectations → Positioning → Flows → Price</small></div>
+        <div class="thesis-body"><blockquote>如果非农后的前端利率冲击不继续扩散到实际收益率和长端，且现货日线重新站稳 4,449—4,466，周五的急跌才可能被定义为事件后修复，而不是趋势破坏。</blockquote><p>这是一条条件化假设，不是方向喊单。黄金已经证明有相对承接，但 9/4 负收盘、实时 DXY/30Y/衍生品缺口仍限制结论强度。</p><div class="tags"><span class="tag"><strong>Fact</strong> · NFP +162k / 失业率 4.1%</span><span class="tag"><strong>Calculation</strong> · 事件回撤 2.22%</span><span class="tag"><strong>Inference</strong> · 黄金修复强于 BTC</span><span class="tag"><strong>Unknown</strong> · 30Y / DXY 同窗未核验</span></div></div>
+      </article>
+      <article class="risk-panel">
+        <div class="panel-title">三个最先要看的反证 <small>What would prove me wrong?</small></div>
+        <div class="risk-body"><div class="risk-item"><i>01</i><div><b>完整日线跌破 4,383</b><span>反弹承接失败，短线结构转弱。</span></div></div><div class="risk-item"><i>02</i><div><b>实际收益率继续上行 + DXY 走强</b><span>机会成本和美元通道重新主导。</span></div></div><div class="risk-item"><i>03</i><div><b>ETF 流出与多头去杠杆同时出现</b><span>正向反身性可能切换为负向反身性。</span></div></div></div>
+      </article>
     </section>
-  </aside>
 
-  <!-- ============ 中栏 50% ============ -->
-  <main class="lg:col-span-2 space-y-4">
-
-    <!-- 模块三 技术结构 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">🔍 模块三 · 行情结构与技术推演</h2>
-      <div id="kline" style="height:380px;" class="mt-2"></div>
-      <div class="mt-3 border-t pt-3" style="border-color:#E8E3D8;">
-        <div class="flex items-center justify-between gap-2">
-          <h3 class="text-[14px] font-bold" style="color:#5B4312;">事件驱动 · 价格响应</h3>
-          <span class="text-[11px] font-semibold" style="color:#8A6D2F;">红涨 · 绿跌 · 点击联动K线</span>
+    <section class="readout-grid" aria-labelledby="readout-title">
+      <article class="readout-main">
+        <div class="readout-title"><div><h2 id="readout-title">先看判断链：为什么黄金反弹仍不能直接叫避险？</h2><p>价格已经修复，但可交易的确认需要跨越四层证据。</p></div><span class="readout-badge">DECISION SPINE</span></div>
+        <div class="logic-chain" aria-label="从价格到交易结论的四层判断链">
+          <div class="logic-node active"><span>01 · EVENT</span><b>非农先触发利率冲击</b><p>就业 +162k，黄金事件小时最大回撤约 2.22%。</p></div>
+              <div class="logic-node"><span>02 · CURVE</span><b>日终曲线发生分层重定价</b><p>9/4 日终 2Y 4.37%、10Y 4.78%、30Y 5.24%；事件小时同窗仍缺失。</p></div>
+          <div class="logic-node"><span>03 · DIVERGENCE</span><b>黄金修复强于 BTC</b><p>黄金收复约 68.8%，BTC 同窗约 30.7%；不等于资金流入已证实。</p></div>
+          <div class="logic-node"><span>04 · ACTION</span><b>等待状态切换</b><p>只有收盘、实际收益率与边际买家同时改善，才升级评级。</p></div>
         </div>
-        <div id="event-buttons" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2"></div>
-        <div id="event-summary" class="mt-2"></div>
+        <div class="reasoning-copy">
+          <p><strong>第一层，事件先改变了近端政策定价。</strong> 非农新增 16.2 万、失业率维持 4.1%，市场第一反应是 2Y 上行更明显；这解释了黄金与 BTC 的同步急跌，但并不说明美国经济已经重新加速。</p>
+          <p><strong>第二层，黄金的后续路径出现分化。</strong> XAU/USD 从事件小时低点修复约 68.8%，BTC 仅修复约 30.7%；SPY 周五约跌 0.38%，QQQ ETF 却约涨 0.19%。这支持“黄金卖压衰减、相对承接增强”，但没有 30Y、DXY 和实时衍生品同窗数据，不能把它压缩成单一避险解释。</p>
+          <p><strong>交易结论：</strong> 当前最有价值的信息不是预测下一根K线，而是观察利率冲击是否继续扩散，以及黄金的承接能否转化为收盘和资金确认。否则，反弹仍按事件后修复处理；Neutral 暂不升级。</p>
+        </div>
+      </article>
+      <aside class="readout-side" aria-label="状态切换门槛">
+        <h3>状态切换门槛</h3><p>把“观点”改写成页面上可反复检查的条件。</p>
+        <div class="threshold confirm"><div class="threshold-row"><b>升级为 Bullish</b><em>需要同时满足</em></div><p>完整日线站稳 4,449—4,466；10Y 实际收益率不再上行；北美边际资金开始接力。</p></div>
+        <div class="threshold"><div class="threshold-row"><b>维持 Neutral</b><em>当前基线</em></div><p>价格停留在 4,383—4,466 的消化区，收益率高位整理，资金证据仍然滞后。</p></div>
+        <div class="threshold invalidate"><div class="threshold-row"><b>下调为 Bearish</b><em>反证出现</em></div><p>完整日线跌破 4,383，进一步失守 4,283，同时实际收益率上行、美元走强或ETF流出。</p></div>
+        <div class="signal-conflict"><b>当前冲突：</b>价格与中期流量偏支持，实际收益率与政策定价偏逆风，实时衍生品缺失。冲突本身就是“不追价”的理由。</div>
+      </aside>
+    </section>
+
+    <section class="mechanism-section" id="mechanism" aria-labelledby="mechanism-title">
+      <div class="mechanism-shell">
+        <div class="mechanism-head"><h2 id="mechanism-title">市场机制层：现在究竟在交易什么？</h2><p>不是把资产并列罗列，而是把同一窗口内的价格变化、政策预期、机会成本和边际资金串成一条可检查的交易逻辑。</p></div>
+        <div class="mechanism-body">
+          <div class="mechanism-main">
+            <div class="mechanism-kicker">CROSS-ASSET MECHANISM MAP · SAME WINDOW, DIFFERENT LAGS</div>
+            <div class="mechanism-flow" aria-label="跨资产交易逻辑链">
+              <div class="flow-step"><span>01 · EVENT</span><b>就业强于预期</b><p>NFP +16.2万，失业率 4.1%；先改变近端政策路径。</p></div>
+              <div class="flow-step highlight"><span>02 · CURVE</span><b>日终曲线分层重定价</b><p>9/4日终 2Y 4.37%、10Y 4.78%、30Y 5.24%；事件小时同窗仍缺失。</p></div>
+              <div class="flow-step highlight"><span>03 · REAL RATE</span><b>机会成本仍高</b><p>10Y实际收益率 2.42%（9/3日终）；非农后小时路径未核验。</p></div>
+              <div class="flow-step"><span>04 · DIVERGENCE</span><b>黄金相对承接</b><p>黄金修复约 68.8%，BTC约 30.7%；机制仍有竞争解释。</p></div>
+              <div class="flow-step highlight"><span>05 · SPOT</span><b>收盘仍未确认</b><p>9/4 收于 4,430.06，低于 4,449—4,466 确认区。</p></div>
+            </div>
+            <div class="mechanism-reading"><h3>当前的市场定价逻辑</h3><p><strong>第一阶段交易的是“就业强于预期 → 近端政策路径更紧”。</strong> 2Y比长端更敏感，黄金与BTC先同步下跌，说明机会成本与去杠杆先占据主导。</p><p><strong>第二阶段交易的是“冲击是否足以持续推高长端真实机会成本”。</strong> 黄金随后比BTC修复更强，可能来自长端冲击没有按前端幅度扩散、卖压耗尽、现货承接或空头回补；在没有30Y、DXY、实时实际利率和衍生品同窗数据前，不能把竞争解释压成“避险买盘”。</p></div>
+          </div>
+          <aside class="mechanism-side">
+            <h3>跨资产确认矩阵</h3><p>每个信号都回答三件事：发生了什么、理论上影响什么、当前是否真的确认。</p>
+            <table class="asset-matrix"><thead><tr><th>资产 / 因子</th><th>观察</th><th>对黄金的交易含义</th></tr></thead><tbody>
+              <tr><td><span class="signal">XAU/USD</span></td><td>4,430.06</td><td>事件后修复，但周五负收盘</td></tr>
+              <tr><td><span class="signal headwind">2Y / 10Y / 30Y</span></td><td>4.37 / 4.78 / 5.24%</td><td>9/4日终 2s10s 扩至41bp、10s30s收窄至46bp；事件同窗缺口</td></tr>
+              <tr><td><span class="signal headwind">10Y Real</span></td><td>2.42%</td><td>机会成本逆风，小时路径未核验</td></tr>
+              <tr><td><span class="signal support">BTC / SPY / QQQ</span></td><td>−1.80 / −0.38 / +0.19%</td><td>风险资产分化，不是简单同向资金流</td></tr>
+              <tr><td><span class="signal support">ETF</span></td><td>7月 +$3bn</td><td>中期支持，北美边际与当日流量未知</td></tr>
+              <tr><td><span class="signal headwind">通胀</span></td><td>PCE 3.7% / core 3.3%</td><td>限制Fed转鸽，压制实际利率下行</td></tr>
+              <tr><td><span class="signal">地缘 / 油价</span></td><td>双向通道</td><td>避险利多可能被通胀通道抵消</td></tr>
+            </tbody></table>
+            <div class="matrix-foot">读法：绿色不是“必涨”，红色也不是“必跌”；只有同一时间窗口内的方向共振，才提高结论强度。</div>
+          </aside>
+        </div>
+        <div class="reaction-block"><h3>事件后反应：用相对预期解释价格，而不是只复述事件</h3><div class="reaction-grid">
+          <div class="reaction-row"><b>增长 / 就业</b><span><strong>事实：</strong>非农强于预期但不足以证明重新加速。<br><strong>交易：</strong>先看近端政策路径，再看实际收益率与黄金承接是否分化。</span></div>
+          <div class="reaction-row"><b>通胀 / Fed</b><span><strong>事实：</strong>通胀仍有粘性。<br><strong>交易：</strong>市场交易的是“降温是否足以迫使Fed转鸽”，目前答案仍不明确。</span></div>
+          <div class="reaction-row"><b>地缘 / 油价</b><span><strong>事实：</strong>避险情绪存在。<br><strong>交易：</strong>黄金避险溢价与能源推升通胀的负面通道同时运行。</span></div>
+          <div class="reaction-row"><b>资金 / 仓位</b><span><strong>事实：</strong>ETF中期流入、CFTC净多。<br><strong>交易：</strong>底盘尚在，但新增边际买家尚未被同日数据证明。</span></div>
+        </div></div>
       </div>
-      <div id="tech-levels" class="grid grid-cols-2 gap-2 mt-3 text-[12px]"></div>
-      <div id="tech-deepdive" class="mt-3"></div>
     </section>
 
-    <!-- 模块四 多因子驱动 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">⚙️ 模块四 · 多因子驱动与宏观归因</h2>
-      <div id="radar" style="height:300px;" class="mt-1"></div>
-      <div id="factor-chains" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[12.5px]"></div>
-      <div id="factor-deepdive" class="mt-3"></div>
+    <section class="research-lab" id="event-lab" aria-labelledby="event-lab-title">
+      <div class="lab-shell">
+        <div class="lab-head"><div><h2 id="event-lab-title">事件研究工作台：先看曲线，再解释资产分化</h2></div><p>2026-09-04 非农 · 锚点 08:30 ET / 12:30 UTC。9/4 日终曲线已补齐；事件同窗的 30Y、DXY 和实际利率路径仍按缺口显示，不用日终数据倒推盘中因果。</p></div>
+        <div class="event-layout">
+          <article class="spot-panel">
+            <div class="subhead"><h3>XAU/USD 现货日线与事件轨</h3><span>32根已完成日线 · 2026-07-23 至 09-04 · 默认显示最近30根</span></div>
+            <div class="chart-frame"><svg class="spot-chart" id="spot-candle-chart" viewBox="0 0 820 345" role="img" aria-label="XAU/USD现货30根完成日线、均线与事件标记"></svg><div class="chart-tooltip" id="candle-tooltip" role="status" aria-live="polite" hidden></div></div>
+            <div class="chart-toolbar" role="toolbar" aria-label="K线视窗控制"><button type="button" class="active" data-chart-range="30">最近30根</button><button type="button" data-chart-range="90">最近90根</button><button type="button" data-chart-range="all">全部账本</button><button type="button" id="chart-reset">回到最新</button><output id="chart-window" aria-live="polite">当前窗口</output><span class="ma-legend" aria-label="移动平均线图例"><i class="ma5">MA5</i><i class="ma10">MA10</i><i class="ma20">MA20</i></span><span class="drag-note">拖动K线查看更早历史；滚轮缩放。当前账本少于90根时，90根视窗会显示全部可用数据。</span></div>
+            <div class="candle-inspector" id="candle-inspector" aria-live="polite">点击或聚焦 K 线查看开盘、最高、最低、收盘和涨跌。</div>
+            <div class="event-controls" aria-label="事件筛选"><label>事件类型<select id="event-type-filter"><option value="all">全部类型</option><option value="macro">经济数据</option><option value="policy">政策 / 讲话</option><option value="fiscal">财政事件</option><option value="market">市场冲击</option></select></label><label>重要性<select id="event-importance-filter"><option value="all">全部重要性</option><option value="high">高 / 极高</option><option value="medium">中</option></select></label><label style="grid-column:1/-1">搜索事件<input id="event-search" type="search" placeholder="搜索名称、日期或关键词" autocomplete="off"></label></div><div class="event-count" id="event-count" aria-live="polite"></div>
+            <div class="event-rail" id="event-rail" role="tablist" aria-label="选择事件查看研究读法"></div>
+            <div class="event-reading" id="event-reading" aria-live="polite"></div>
+          </article>
+          <aside class="curve-panel">
+            <div class="subhead"><h3>2Y—10Y—30Y：债市在交易什么？</h3><span>官方日终 + 同日媒体快照</span></div>
+            <svg class="curve-svg" id="curve-chart" viewBox="0 0 420 190" role="img" aria-label="2026年9月3日与9月4日美国国债收益率曲线"></svg>
+            <div class="curve-read"><b>当前判断：9/4 不是全曲线同向交易，而是 2Y、10Y、30Y 分层重定价。</b><p>官方日终数据显示：2Y 从 4.41% 降至 4.37%，10Y 从 4.63% 升至 4.78%，30Y 从 5.25% 降至 5.24%。2s10s 由 22bp 扩至 41bp，10s30s 由 62bp 收窄至 46bp；这说明 10Y 是当日曲线中的相对异常点，不能用“收益率整体上行/下行”解释黄金。</p></div>
+            <ul class="curve-facts">
+              <li><b>日终曲线</b><span>9/3 → 9/4：2Y <strong>4.41 → 4.37%</strong>，10Y <strong>4.63 → 4.78%</strong>，30Y <strong>5.25 → 5.24%</strong>；2s10s <strong>22 → 41bp</strong>，10s30s <strong>62 → 46bp</strong>。</span></li>
+              <li><b>非农后快照</b><span>Reuters 约 07:54 ET：2Y <strong>+5bp</strong> 至约 4.38%，10Y <strong>+1bp</strong> 至约 4.776%；媒体快照存在时点与取整差异。</span></li>
+              <li><b>必须留白</b><span class="gap-copy">9/4 官方曲线是日终值，不是 08:30 ET 后的小时路径；2Y / 10Y / 30Y、DXY 与实际收益率同窗仍未取得。因此可以描述日终曲线形状，但不能把它倒推成事件小时的先后顺序或黄金反弹原因。</span></li>
+            </ul>
+          </aside>
+        </div>
+        <div class="lab-foot">来源与时间边界：<a href="https://www.bls.gov/news.release/archives/empsit_09042026.htm" target="_blank" rel="noreferrer">BLS 就业报告</a>（08:30 ET）· <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value=2026&type=daily_treasury_yield_curve" target="_blank" rel="noreferrer">U.S. Treasury 日终曲线</a>（9/3、9/4）· Reuters 9/4 盘中快照 · XAU/USD小时线来自 Twelve Data（取回约 21:23 UTC，最新尾点未完成）· BTC/SPY/QQQ 为延迟公开行情。K线仅使用可追溯 XAU/USD 现货完成日线；不以 COMEX、ETF 或期货替代。</div>
+      </div>
     </section>
 
-    <!-- 模块七 预期差与情景 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">⚖️ 模块七 · 预期差与情景分析</h2>
-      <table class="w-full text-[12px] mt-2 border-collapse">
-        <thead><tr class="text-left" style="background:#FAF7EF;color:#5B4312;"><th class="p-2 border" style="border-color:#E8E3D8;">变量</th><th class="p-2 border" style="border-color:#E8E3D8;">市场预期</th><th class="p-2 border" style="border-color:#E8E3D8;">现实</th><th class="p-2 border" style="border-color:#E8E3D8;">定价状态</th></tr></thead>
-        <tbody id="gap-rows"></tbody>
-      </table>
-      <div id="scenario-btns" class="mt-3 flex gap-2"></div>
-      <div id="scenario-panels"></div>
-      <div id="gap-deepdive" class="mt-3"></div>
+    <section class="research-lab" id="driver-lab" aria-labelledby="driver-lab-title">
+      <div class="lab-shell">
+        <div class="lab-head"><div><h2 id="driver-lab-title">多因子对冲图：不同周期，交易的不是同一件事</h2></div><p>绿色与红色分别表示对 XAU/USD 的定性顺风 / 逆风强度。它不是收益概率、不是仓位建议；旁边的“研究注意力”来自已有日报权重，用来解释本周期应先核验什么。</p></div>
+        <div class="driver-layout">
+          <article class="driver-visual">
+            <div class="subhead"><h3 id="horizon-title">短期 · 1—5 日</h3><span>0—5 · 研究判断</span></div>
+            <div class="horizon-tabs" role="tablist" aria-label="选择研究周期"><button class="active" type="button" role="tab" data-horizon="short">短期 1—5日</button><button type="button" role="tab" data-horizon="medium">中期 1—4周</button><button type="button" role="tab" data-horizon="long">长期 3—12月</button></div>
+            <div class="radar-wrap"><svg class="radar-chart" id="factor-radar" viewBox="0 0 430 380" role="img" aria-label="六因素利多与利空强度雷达图"></svg></div>
+            <div class="radar-legend"><span><i></i>利多强度</span><span><i class="bear"></i>利空强度</span></div><p class="score-note">强度是将已列出的事实和推理压缩成可比较的阅读刻度；正式自动化前，规则与分值需要你的批准，不能自行沉淀为模型参数。</p>
+          </article>
+          <article class="driver-copy">
+            <div class="subhead"><h3>顺风链与逆风链</h3><span id="driver-window">NFP 后首个交易窗口</span></div>
+            <div class="driver-chains">
+              <section class="driver-chain"><h3>顺风链 · 需要继续被验证</h3><p id="bull-chain"></p><ul id="bull-evidence"></ul></section>
+              <section class="driver-chain bear"><h3>逆风链 · 当前更占主导</h3><p id="bear-chain"></p><ul id="bear-evidence"></ul></section>
+            </div>
+            <div class="attention-row"><h3>研究注意力权重</h3><p>这不是回归贡献或涨跌概率，而是日报在该周期把验证资源投向各因子的比例；合计 100。</p><div class="attention-grid" id="attention-grid"></div></div>
+          </article>
+        </div>
+      </div>
     </section>
+
+    <section aria-labelledby="deep-title">
+      <div class="section-head"><div><h2 id="deep-title">四个真正决定结论的深度视角</h2></div><p>这里不是重复模块摘要，而是把数据如何改变交易判断写出来。</p></div>
+      <div class="deep-grid">
+        <article class="deep-card blue"><div class="deep-card-head"><h3>就业强劲，不等于黄金应该避险上涨</h3><small>09 · MACRO REGIME</small></div><p>9月4日公布的8月非农新增 16.2 万，失业率 4.1%，平均时薪环比 +0.3%、同比 +3.1%，且前两月合计上修 5.5 万。它足以触发政策路径重估，但不足以单独定义美国经济重新加速或硬着陆。</p><p>增长下降 + 通胀下降会通过实际利率下行形成黄金顺风；增长下降 + 通胀上升则是避险利多与机会成本利空的双向冲击。周五价格先跌，说明第一轮交易偏向政策重定价，而不是“就业强劲 → 避险”。</p><p class="takeaway"><b>对交易的影响：</b> 只有后续通胀走低、实际收益率回落且现货承接得到确认，增长放缓才会转化为黄金顺风。</p></article>
+        <article class="deep-card red"><div class="deep-card-head"><h3>收益率不是一个点，而是一条曲线</h3><small>10 · CURVE / REAL RATE</small></div><p>9/3 日终，2Y、10Y、30Y分别为 4.41%、4.63%、5.25%，10Y实际收益率为 2.42%。非农公布后的已核验快照中，2Y约 +5bp，而10Y约 +1bp：这更像近端政策冲击大于长端重估，而非“10Y上涨 → 黄金下跌”的单点叙事。</p><p>若后续同窗数据验证 2Y 上行、10Y/30Y 下行，才可进一步解释为“前端偏鹰、长端增长 / 期限溢价受抑”的曲线压平。黄金若同期收复跌幅，可能与长久期机会成本或避险需求改善一致；在没有 XAU/USD 同窗路径前，这仍只是待验证机制，不是因果结论。</p><p class="takeaway"><b>对交易的影响：</b> 每次事件都同时看 2Y、10Y、30Y、实际利率和曲线斜率；只盯10Y会把“债市交易什么”误读成一条机械相关性。</p></article>
+        <article class="deep-card green"><div class="deep-card-head"><h3>资金支持存在，但接力者不清楚</h3><small>13–14 · FLOWS</small></div><p>7月全球黄金ETF净流入约 30 亿美元、持仓增加 23 吨至 4,068 吨，说明中期结构性需求仍在；CFTC 8/25 非商业净多 243,334 手，净多周增 21,145 手，价格与未平仓量同向的组合更像有新多参与。</p><p>但这些证据都有滞后：北美ETF年初至今仍净流出，CFTC不是实时仓位，实时期权、基差、IV、skew、gamma 和清算数据也未取得。因此可以说“资金底盘没有消失”，不能说“新增买家已经完成接力”。</p><p class="takeaway"><b>对交易的影响：</b> 反弹要升级，必须看到北美边际资金改善或同日衍生品确认，否则仓位偏多反而会增加回撤敏感度。</p></article>
+        <article class="deep-card"><div class="deep-card-head"><h3>叙事正在从催化剂变成拥挤风险</h3><small>18–20 · REFLEXIVITY</small></div><p>地缘风险、央行多元化、美元信用和财政压力共同构成了黄金的强叙事，这些因素能解释为何价格在高位仍有承接；但当叙事已经被广泛交易，它就不再是无条件的新增催化剂。</p><p>真正需要判断的是反身性方向：价格上涨带来ETF流入和多头增仓，是正向闭环；价格跌破 4,383 后若出现流出与去杠杆，则会转为负向闭环。当前ETF与实时OI不完整，所以只能判定“脆弱支持”，不能判定闭环已经形成。</p><p class="takeaway"><b>对交易的影响：</b> 不用故事给价格设目标，用价格和资金确认故事是否仍在产生边际买家。</p></article>
+        <article class="deep-card"><div class="deep-card-head"><h3>技术位是状态开关，不是预测目标</h3><small>25–26 · CONFIRMATION</small></div><p>4,383 是近端支撑，4,283 是更深的失效参考，4,449—4,466 是反弹升级的确认区。当前公开报价 4,474.20 已经越过确认区，但最新完整收盘仍为 4,385.74，盘中和收盘必须分开处理。</p><p>这让技术模块与宏观模块产生了可执行的关系：价格上破只是提出假设，实际收益率和资金流要负责验证假设。若收盘不能站稳，突破就更接近回补或事件修复；若收盘确认且收益率回落，才是状态切换。</p><p class="takeaway"><b>对交易的影响：</b> 当前不追价，等待“收盘 + 实际收益率 + 边际资金”三者至少形成明确共振。</p></article>
+        <article class="deep-card"><div class="deep-card-head"><h3>数据缺口如何改变置信度</h3><small>15 · EVIDENCE DISCIPLINE</small></div><p>本报告不是把缺失数据填成 Unknown 就结束，而是明确缺口的方向性影响：没有实时衍生品，就无法区分空头回补、多头追涨和现货杠杆变化；没有同日流动性组合，就不能把价格变化归因为全球流动性扩张或收紧。</p><p>因此数据缺口不会自动制造看空结论，但会限制结论的强度。当前评级保持 Neutral，不是因为“什么都不知道”，而是因为可核验的多空证据相互冲突，且最能解释短线的两类数据尚未同日取得。</p><p class="takeaway"><b>对交易的影响：</b> 把“等待确认”作为正式决策，而不是把证据不足伪装成高确定性观点。</p></article>
+      </div>
+    </section>
+
+    <section id="modules" aria-labelledby="modules-title">
+      <div class="section-head"><div><h2 id="modules-title">35 个模块，逐项审计</h2></div><p>上方先读深度推理；这里保留完整模块、事实层、推理层和数据影响。<br>不以 18 个摘要章节替代 35 个分析模块。</p></div>
+      <div class="evidence-grid">
+        <section class="module-panel" aria-label="35模块分析列表">
+          <div class="module-controls" role="toolbar" aria-label="模块筛选"><button class="active" type="button" data-filter="all">全部 35</button><button type="button" data-filter="market">市场与价格</button><button type="button" data-filter="macro">宏观与政策</button><button type="button" data-filter="flows">资金与流动性</button><button type="button" data-filter="risk">结构与风险</button></div>
+          <div class="module-list" id="module-list"></div>
+        </section>
+        <aside class="source-panel" aria-label="来源与质量登记">
+          <div class="panel-title">来源登记 <small>同一页面保留证据边界</small></div>
+          <div class="source-body">
+            <div class="source-note"><b>现货优先</b><br>价格、技术、支撑阻力与风险收益只使用 XAU/USD 现货。COMEX、ETF、CFTC 和央行数据均标注日期与滞后。</div>
+            <div class="gate-stack" id="publish-gate" role="status" aria-live="polite"><div class="publish-gate ready"><div class="publish-gate-head"><b>日终日报门禁 · 2026-09-04</b><span>READY</span></div><p>8/8 个关键日终记录已通过核验，可生成日终收盘回退版。</p><ul><li>XAU/USD、DXY、BTC、SPY、QQQ：9/4 日终记录</li><li>UST 2Y / 10Y / 30Y：9/4 官方日终曲线</li></ul><small>DXY 99.1600 通过 Market Data 连接器取得；直接 Node Yahoo API 返回403，已保留连接器来源与时间戳。</small></div><div class="publish-gate"><div class="publish-gate-head"><b>事件研究门禁 · 非农同窗</b><span>BLOCKED</span></div><p>盘中跨资产覆盖为 0/8，禁止把日终数据写成小时级因果证据。</p><ul><li>已具备：非农事实与 XAU/USD 事件窗口</li><li>仍缺少：2Y / 10Y / 30Y、DXY、BTC、SPY、QQQ 的同窗路径</li></ul><small>这不会阻止日终日报发布，但会阻止“某期限推动黄金反弹”的确定性结论。</small></div></div>
+            <div class="source-note" id="hourly-pipeline-status"><b>小时数据管线</b><br>XAU/USD 1h：Twelve Data 已接通；9/4 日终 8/8 已核验。美债盘中：网页快照 / futures_proxy 分层记录，期货价格不转换成收益率；当前仅允许日终收盘回退，不允许小时级事件归因。</div>
+            <ul class="source-list">
+              <li><b>XAU/USD 现货日线 / 小时</b><span>Twelve Data · 9/4 日线取回约 21:41 UTC；1h 取回约 21:23 UTC · 公开API数据</span><a href="https://twelvedata.com/forex" target="_blank" rel="noreferrer">查看接口范围 ↗</a></li>
+              <li><b>XAU/USD 1h OHLC 管线</b><span>Twelve Data · 本地采集器已通过真实请求回归 · 只作为盘中补充，不替换现货日线主证据</span><a href="https://twelvedata.com/forex" target="_blank" rel="noreferrer">查看接口范围 ↗</a></li>
+              <li><b>Fed / 收益率 / 工业生产</b><span>Federal Reserve / U.S. Treasury · 9/4 2Y 4.37% / 10Y 4.78% / 30Y 5.24%</span><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value=2026&type=daily_treasury_yield_curve" target="_blank" rel="noreferrer">Treasury日终曲线 ↗</a></li>
+              <li><b>DXY</b><span>Market Data 连接器 · DX-Y.NYB · 9/4 收盘 99.1600 · 源时间 04:00 UTC</span><span>连接器快照，非直接 Yahoo Node 请求</span></li>
+              <li><b>CPI / PPI / Employment</b><span>BLS · 8月就业已发布；通胀等待后续发布</span><a href="https://www.bls.gov/news.release/archives/empsit_09042026.htm" target="_blank" rel="noreferrer">8月就业报告 ↗</a></li>
+              <li><b>GDP / PCE / Retail</b><span>BEA、U.S. Census · 最新已发布值</span><a href="https://www.bea.gov/news/2026/gdp-second-estimate-and-corporate-profits-2nd-quarter-2026" target="_blank" rel="noreferrer">BEA GDP ↗</a></li>
+              <li><b>ETF / Central Banks</b><span>World Gold Council · 7月 / Q2，滞后结构证据</span><a href="https://www.gold.org/goldhub/research/gold-etfs-holdings-and-flows/2026/08" target="_blank" rel="noreferrer">WGC ETF ↗</a></li>
+              <li><b>CFTC / 初请</b><span>CFTC COMEX · 8/25；DOL · 8/29周</span><a href="https://www.cftc.gov/dea/futures/deacmxlf.htm" target="_blank" rel="noreferrer">COT ↗</a></li>
+            </ul>
+            <table class="quality-table" aria-label="数据质量状态"><thead><tr><th>质量项</th><th>状态</th></tr></thead><tbody><tr><td>9/4关键日终数据</td><td>8/8 已核验</td></tr><tr><td>现货1h事件窗口</td><td>已接通</td></tr><tr><td>宏观核心指标</td><td>已核验</td></tr><tr><td>事件窗口跨资产同窗</td><td>0/8 · 缺口</td></tr><tr><td>日终日报发布门禁</td><td>READY · CLOSE</td></tr><tr><td>小时级事件结论</td><td>BLOCKED</td></tr><tr><td>研究情景概率</td><td>不估计</td></tr></tbody></table>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="scenarios" class="presentation-hidden" aria-labelledby="scenarios-title">
+      <div class="section-head"><div><h2 id="scenarios-title">情景不是预测，是可验证路径</h2></div><p>没有历史校准，不伪造情景概率。</p></div>
+      <div class="bottom-grid">
+        <article class="module-panel"><div class="panel-title">Bull / Base / Bear <small>触发条件优先</small></div><div class="scenario-list"><div class="scenario"><div class="scenario-label bull">BULL</div><p><strong>触发：</strong>日线站稳 4,449—4,466，实际收益率回落，ETF连续流入。<br><strong>路径：</strong>事件冲击被消化，反弹升级为趋势恢复。</p></div><div class="scenario"><div class="scenario-label base">BASE</div><p><strong>触发：</strong>价格在 4,383—4,466 区间消化，收益率高位整理。<br><strong>路径：</strong>高波动震荡，区间中部不追价。</p></div><div class="scenario"><div class="scenario-label bear">BEAR</div><p><strong>触发：</strong>跌破 4,383并失守 4,283，实际收益率上行且美元走强。<br><strong>路径：</strong>反弹失败，机会成本重新主导。</p></div></div></article>
+      </div>
+    </section>
+
+    <footer class="footer"><b>2026-09-05 周五收盘版 · 本地待确认</b><span>本页未部署；当前版本已按最新数据重跑可视化、事件研究和35模块分析。待你确认后再部署，今日不修改定时任务提示词。</span></footer>
   </main>
 
-  <!-- ============ 右栏 25% ============ -->
-  <aside class="lg:col-span-1 space-y-4 lg:sticky lg:top-4">
-
-    <!-- 模块五 资金流四维确认 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">💰 模块五 · 价格 / 宏观 / 资金确认</h2>
-      <div id="flow-four" class="mt-2 space-y-1.5 text-[12.5px]"></div>
-      <p id="flow-concl" class="text-[12px] mt-2"></p>
-      <div id="flow-table" class="mt-2 space-y-1 text-[12px] border-t pt-2" style="border-color:#E8E3D8;"></div>
-      <p id="flow-gap" class="hidden"></p>
-    </section>
-
-    <!-- 模块六 叙事生命周期 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">🌐 模块六 · 叙事生命周期</h2>
-      <div id="narrative-bar" class="mt-3"></div>
-      <p id="narrative-phase" class="text-[12px] mt-2"></p>
-      <div id="narrative-items" class="mt-2 space-y-1.5 text-[12px] border-t pt-2" style="border-color:#E8E3D8;"></div>
-    </section>
-
-    <!-- 模块八 催化剂倒计时 + Top3 -->
-    <section class="panel p-4">
-      <h2 class="text-[15px] font-bold" style="color:#5B4312;">⏱ 催化剂倒计时</h2>
-      <div class="mt-2 rounded-lg p-3 text-center" style="background:linear-gradient(135deg,#FDF6E3,#FBF3E0);border:1px solid #ECD9A8;">
-        <div id="countdown-label" class="text-[12px]" style="color:#6B7280;"></div>
-        <div id="countdown" class="text-xl font-bold tabular-nums mt-1" style="color:#5B4312;">--天 --时 --分</div>
-      </div>
-      <div id="catalyst-timeline" class="mt-2 space-y-1.5 text-[12px]"></div>
-      <div class="mt-3 border-t pt-2" style="border-color:#E8E3D8;">
-        <div class="font-bold text-[12.5px]" style="color:#5B4312;">Top 3 监控（权重不平均）</div>
-        <div id="top3" class="mt-1 space-y-1 text-[12px]"></div>
-      </div>
-    </section>
-  </aside>
-</div>
-
-<!-- ============ 免责声明 ============ -->
-<footer class="max-w-[1400px] mx-auto px-4 pb-10">
-  <div class="panel p-4 text-[12px]" style="color:#6B7280;">
-    <p class="font-bold" style="color:#5B4312;">免责声明</p>
-    <p id="disclaimer-text"></p>
-  </div>
-</footer>
-
-<script>
-/* ====================================================================
-   🔽🔽🔽  DATA 数据注入层 —— 只改这里  🔽🔽🔽
-   以下为 2026-08-24 示例数据（已可正常渲染）。替换为你找到的新数据即可。
-   字段含义见各字段注释。文本字段可含 <b> 与 <br>；需显示 < 请写 &lt;
-==================================================================== */
-const DATA = {
-  "meta": {
-    "reportDate": "2026-08-25",
-    "weekday": "周二",
-    "deadline": "2026-08-25 06:29 (UTC+8)",
-    "priceSource": "gold-api.com · XAU/USD现货",
-    "costNote": "未计入交易成本 · Investing历史日线（XAU/USD现货）；仅获得23根，缺少7根；不标记为完整30日窗口"
-  },
-  "kpi": [
-    {
-      "label": "XAU/USD现货",
-      "value": "4,656.20",
-      "chg": "+1.14% vs 最近收盘",
-      "dir": "up"
-    },
-    {
-      "label": "9月加息概率",
-      "value": "39%",
-      "chg": "2026-08-22 · Investing基于CME",
-      "dir": "down"
-    },
-    {
-      "label": "10Y实际收益率",
-      "value": "2.38%",
-      "chg": "2026-08-24 · 下行",
-      "dir": "down"
-    },
-    {
-      "label": "RSI(14)",
-      "value": "67.7",
-      "chg": "由XAU/USD现货收盘计算",
-      "dir": "flat"
-    },
-    {
-      "label": "全球黄金ETF",
-      "value": "全球7月+$3bn",
-      "chg": "2026-07-31 · 连续性未确认",
-      "dir": "flat"
-    },
-    {
-      "label": "CFTC非商业净多",
-      "value": "222,189",
-      "chg": "2026-08-18 · Legacy COT",
-      "dir": "flat"
+  <script>
+    const modules = [
+      {n:1,g:'market',t:'研究对象',s:'已核验',c:'XAU/USD现货是价格与技术唯一基础。',f:'价格、支撑、阻力和风险收益不使用期货或ETF替代。',i:'辅助资产只解释资金和结构，不改变现货结论。',d:'无。'},
+      {n:2,g:'market',t:'最新信息原则',s:'已核验',c:'报价、完整收盘、宏观数据、资金流和仓位分开记录。',f:'Twelve Data 9/4完整收盘4,430.05647；9/5形成中bar被排除。',i:'本版以周五完整日线为收盘基准，小时尾点只用于事件窗口。',d:'公开报价可能延迟，不能视为可执行价。'},
+      {n:3,g:'market',t:'信息来源优先级',s:'已核验',c:'核心宏观数据来自官方来源，行情源冲突保留。',f:'Fed、BLS、BEA、Census、DOL、WGC、CFTC均已检索。',i:'DXY使用公开行情源，不能给予官方数据同等权重。',d:'DXY不同页面存在点位差异。'},
+      {n:4,g:'market',t:'事实 / 共识 / 推断 / 假设',s:'已核验',c:'所有重要结论按证据层级输出。',f:'9/4收盘下跌约0.98%，事件小时最大回撤约2.22%，均由OHLC计算。',i:'“先政策冲击、后相对承接”是时间顺序支持的推断，不是唯一因果。',d:'事件后30Y、DXY与衍生品同窗证据不完整。'},
+      {n:5,g:'market',t:'当前市场状态',s:'已核验',c:'非农冲击后的高波动修复，尚未确认趋势反转。',f:'9/1—9/4收盘累计约+2.32%；9/4收盘4,430.05647，较9/3跌约0.98%。',i:'价格没有被单日冲击完全破坏，但修复尚未转化为收盘确认。',d:'事件小时的最新21:00 UTC bar仍为partial。'},
+      {n:6,g:'market',t:'价格驱动因素排序',s:'部分核验',c:'短线先看政策路径与实际利率，中线再看资金和结构需求。',f:'非农后BTC与黄金先跌，黄金随后修复更强；10Y实际收益率9/3为2.42%。',i:'第一阶段机会成本 / 去杠杆占主导，第二阶段出现相对承接，但机制未唯一识别。',d:'30Y、DXY、实时资金和衍生品缺失。'},
+      {n:7,g:'macro',t:'美联储',s:'已核验',c:'政策仍受通胀约束，非农强化近端限制性路径的可能性。',f:'7/29目标区间3.50%—3.75%；下一次会议9/15—9/16。',i:'非农即时传导主要改变近端政策路径，不等同于长期黄金结构改变。',d:'本版不沿用旧的加息概率快照，最新完整分布未核验。'},
+      {n:8,g:'macro',t:'美国通胀',s:'已核验',c:'通胀仍有粘性，尚未给出“增长降温 + 通胀下降”的完整顺风。',f:'7月CPI同比3.4%、核心2.5%；PCE同比3.7%、核心3.3%；PPI同比4.7%。',i:'增长放缓与通胀偏高并存，避险利多和实际利率利空可能同时运行。',d:'8月PPI/CPI分别预定9/10、9/11，未来结果未知。'},
+      {n:9,g:'macro',t:'美国经济 / 就业',s:'已核验',c:'就业仍扩张但未证明美国经济重新加速。',f:'BLS 9/4：NFP +16.2万、失业率4.1%、时薪环比+0.3% / 同比+3.1%；前两月合计上修5.5万。',i:'非农先让市场重估近端政策路径，不能直接推出软着陆或硬着陆。',d:'后续JOLTS、初请、持续领取失业金和修订仍关键。'},
+      {n:10,g:'macro',t:'美债与实际利率',s:'部分核验',c:'必须联合看2Y、10Y、30Y、实际利率与曲线斜率。',f:'Treasury 9/4日终：2Y4.37%、10Y4.78%、30Y5.24%；2s10s扩至41bp、10s30s收窄至46bp；10Y实际2.42%为9/3最新可得。',i:'日终显示10Y相对异常，不能用单点收益率解释黄金；事件小时的期限先后与实际利率路径仍未证实。',d:'同源同时间戳的盘中2Y/10Y/30Y、实际利率与XAU/USD路径缺失。'},
+      {n:11,g:'macro',t:'美元',s:'数据缺口',c:'美元通道只能作为待核验变量，不能写成已确认利多。',f:'当前取得的可靠同窗资料不足以给出DXY、EUR/USD、USD/JPY的完整路径。',i:'若美元与实际收益率同向上行，黄金逆风会更明确；若美元反转走弱，可能解释部分修复。',d:'DXY精确收盘、小时路径与同窗汇率未取得。'},
+      {n:12,g:'flows',t:'央行购金',s:'数据缺口',c:'长期结构变量可以托底，但本次没有足以解释周五波动的最新同日证据。',f:'央行购金数据具有月度或季度滞后，不能替代事件小时资金数据。',i:'结构性需求更适合解释高位承接，不适合解释非农公布后几分钟。',d:'最新可比新增购金数据未纳入本次周五窗口。'},
+      {n:13,g:'flows',t:'黄金ETF资金流',s:'部分核验',c:'7月全球流入支持中期，但北美边际资金尚未确认。',f:'全球7月净流入约30亿美元，持仓增23吨至4,068吨；北美YTD仍净流出。',i:'结构底盘可能帮助黄金跌后承接，但不能解释9/4小时反弹。',d:'9/4同日及连续日ETF流量未取得。'},
+      {n:14,g:'flows',t:'CFTC / 仓位',s:'部分核验',c:'只作为有日期的COMEX期货仓位辅助，不替代现货。',f:'CFTC最新可见报告对应8/25，属于期货周度证据；本版不混用不同分类净多数字。',i:'可用于判断事件前多头是否可能拥挤，不能判定9/4是新多还是空头回补。',d:'事件后仓位、OI与Managed Money同窗数据未知。'},
+      {n:15,g:'flows',t:'衍生品',s:'数据缺口',c:'目前不能可靠判定现货、杠杆、空头回补或多头追涨谁主导。',f:'没有可靠的basis、funding、IV、skew、gamma、清算数据。',i:'CFTC只能提供滞后辅助证据。',d:'实时衍生品全套数据未取得。'},
+      {n:16,g:'flows',t:'地缘政治',s:'部分核验',c:'避险通道利多，但油价—通胀—实际利率通道会抵消。',f:'Fed声明提到中东冲突和能源供给冲击。',i:'地缘升级不自动等于黄金上涨。',d:'俄乌、中美、霍尔木兹事件账本未全部同日核验。'},
+      {n:17,g:'flows',t:'流动性',s:'数据缺口',c:'流动性方向不可靠，降低权重。',f:'Fed声明仍强调维持充足准备金。',i:'没有同日TGA、RRP、全球M2等完整组合，不能判断扩张或收紧。',d:'Fed资产负债表和全球流动性序列未同日刷新。'},
+      {n:18,g:'risk',t:'Narrative Risk 叙事风险',s:'已核验',c:'地缘、央行多元化与财政风险构成底盘，但不是周五日内主因。',f:'周五价格先随利率冲击下跌，之后出现承接；结构叙事只能解释部分韧性。',i:'叙事越共识化，越需要边际资金而不是重复故事来确认。',d:'实时调查、期权偏斜与资金流不足以量化拥挤度。'},
+      {n:19,g:'risk',t:'Positioning 仓位结构',s:'部分核验',c:'事件前是否拥挤未知，不能把反弹写成新多接力。',f:'CFTC为8/25周度期货证据；ETF为7月结构流量，二者均滞后。',i:'黄金相对BTC修复更强，可能是杠杆结构不同，也可能有现货承接。',d:'CTA、实时宏观基金、OI和清算数据未核验。'},
+      {n:20,g:'risk',t:'Reflexivity 反身性',s:'部分核验',c:'价格承接存在，但正向反馈闭环尚未证实。',f:'7月ETF净流入是滞后支持，9/4黄金从低点修复但周五仍负收盘。',i:'若后续价格、ETF和仓位同向改善，才可能形成上涨—流入—增仓闭环。',d:'实时ETF、OI和清算数据缺失。'},
+      {n:21,g:'risk',t:'Execution Risk 执行风险',s:'已核验',c:'Bullish故事可能正确，但无法转化成价格上涨。',f:'实际收益率高、ETF短期不连续、9/3尚未收盘。',i:'最大执行风险是好消息被定价、但没有新买家接力。',d:'无。'},
+      {n:22,g:'risk',t:'Risk Premium 风险溢价',s:'部分核验',c:'价格包含地缘、财政、美元信用、央行多元化和通胀溢价。',f:'地缘与财政风险均被市场广泛交易。',i:'风险消失时可能出现溢价压缩，即使基本面未完全恶化。',d:'没有可审计的风险溢价拆分模型。'},
+      {n:23,g:'risk',t:'Expectation Gap 预期差',s:'已核验',c:'非农显著高于预期，真正的预期差在“强就业能否持续改变政策路径”。',f:'NFP +162k，高于约53k调查预期；失业率4.1%不变，前两月合计上修55k。',i:'第一轮是近端政策重估；若长端和实际收益率不持续跟随，黄金反弹说明冲击的持续性受到质疑。',d:'共识数来自媒体调查快照，不能等同于全体交易者仓位。'},
+      {n:24,g:'risk',t:'边际买家',s:'数据缺口',c:'尚未识别已确认、足以推动再涨10%的新增买家。',f:'潜在买家包括北美ETF、CTA、宏观基金、央行和避险资金。',i:'上涨空间可能受到边际买盘不足限制。',d:'没有实时买方分类数据。'},
+      {n:25,g:'market',t:'技术结构',s:'部分核验',c:'事件后出现承接，但9/4收盘仍低于反弹确认区。',f:'9/4收盘4,430.05647；支撑参考4,383和4,283；确认区4,449—4,466。',i:'日线收复确认区才是状态切换证据，盘中反弹不能替代收盘。',d:'支撑区为研究参考，不是回测后的目标价。'},
+      {n:26,g:'market',t:'价格+资金+仓位+宏观',s:'部分核验',c:'价格承接与宏观逆风并存，不构成完整Bullish Confirmation。',f:'价格周五负收盘；ETF中期支持滞后；CFTC为滞后期货证据；10Y实际收益率仍高。',i:'当前应等待收盘、实际收益率和边际资金共振，而不是平均化信号。',d:'实时衍生品、30Y与DXY同窗缺失。'},
+      {n:27,g:'risk',t:'Bull / Base / Bear',s:'已核验',c:'三个情景均以可观测触发条件定义。',f:'Bull看4,466和实际收益率；Base看4,383—4,466；Bear看4,283。',i:'情景是路径，不是预测。',d:'不输出未校准概率。'},
+      {n:28,g:'risk',t:'概率原则',s:'已核验',c:'概率无法可靠估计，因此不伪造数字。',f:'数据滞后、DXY与30Y同窗缺失、实时衍生品缺失、历史样本未校准。',i:'市场隐含利率概率即使取得，也不是黄金Bull/Bear概率。',d:'研究概率模型尚未完成。'},
+      {n:29,g:'risk',t:'Risk / Reward',s:'已核验',c:'当前追涨的上行目标不可审计，下行参考可量化。',f:'从4,430.05647回到4,383约-1.06%，回到4,283约-3.32%。',i:'周五负收盘且确认区未收复，不把事件后修复当作趋势入场信号。',d:'不编造Bull目标或研究概率。'},
+      {n:30,g:'risk',t:'交易逻辑失效条件',s:'已核验',c:'宏观、资金、技术、叙事和地缘均有明确反证。',f:'跌破4,383/4,283，实际收益率上行，DXY走强，ETF流出。',i:'反证出现时评级从Neutral下调，而不是维护原观点。',d:'无。'},
+      {n:31,g:'risk',t:'Catalysts 催化剂',s:'已核验',c:'非农已发生；短期转向PPI、CPI、FOMC与日线确认。',f:'8月就业报告已于9/4公布；后续关注9/10 PPI、9/11 CPI、9/15—16 FOMC。',i:'数据意外必须通过2Y/10Y/30Y曲线、实际收益率和现货的相对反应验证。',d:'未来事件不是已发生事实；发布时间需在正式日报运行时再核对。'},
+      {n:32,g:'risk',t:'重点监控清单',s:'已核验',c:'不平均分配权重，当前三大指标是实际收益率、现货收盘、北美ETF。',f:'面板保留价格、DXY、收益率、CPI、NFP、Fed、ETF、CFTC、地缘等。',i:'监控清单服务于状态切换，而不是指标堆砌。',d:'实时期权数据仍缺失。'},
+      {n:33,g:'risk',t:'最终输出格式',s:'已核验',c:'35模块明细是主文，18章节只做综合导航。',f:'每个模块都可展开查看事实、推理、影响和缺口。',i:'可视化只重新组织信息，不替研究正文做删减。',d:'Demo为本地页面，未部署。'},
+      {n:34,g:'risk',t:'最重要的分析纪律',s:'已核验',c:'不编数据、不混用资产、不把叙事写成事实。',f:'页面保留来源、时间、滞后和辅助资产边界。',i:'数据缺口降低置信度，但不允许用虚构数据填补。',d:'无。'},
+      {n:35,g:'risk',t:'最终原则',s:'已核验',c:'不预测市场，定义什么条件下做多、做空或什么都不做。',f:'当前结论是Neutral，等待4,449—4,466收盘确认、实际收益率和边际资金共同改善。',i:'最值得交易的不是“央行买金必涨”，而是确认是否形成跨资产共振。',d:'无。'}
+    ];
+    const candleData = [
+      ['07/23',4132.35,4146.12,4040.10,4048.78],['07/24',4047.65,4082.45,4021.56,4053.17],['07/27',4092.62,4116.29,4065.17,4076.65],['07/28',4076.66,4089.92,4011.35,4028.75],['07/29',4027.86,4116.68,3995.78,4066.16],
+      ['07/30',4064.68,4120.43,4028.44,4103.58],['07/31',4104.80,4116.30,4020.82,4042.67],['08/03',4077.11,4083.29,4019.19,4053.45],['08/04',4053.73,4106.46,4042.52,4077.65],['08/05',4077.13,4267.97,4065.45,4247.02],
+      ['08/06',4249.54,4306.00,4223.17,4240.42],['08/07',4241.78,4372.17,4229.67,4343.74],['08/10',4342.50,4396.71,4312.45,4388.96],['08/11',4389.82,4435.47,4356.49,4368.46],['08/12',4368.48,4441.26,4360.82,4408.70],
+      ['08/13',4409.88,4450.23,4343.76,4351.34],['08/14',4351.28,4397.25,4310.73,4376.60],['08/17',4381.12,4429.26,4367.24,4416.82],['08/18',4417.55,4436.39,4328.86,4334.52],['08/19',4334.68,4524.70,4324.49,4522.80],
+      ['08/20',4522.28,4541.49,4450.52,4519.08],['08/21',4519.09,4632.61,4508.83,4603.56],['08/24',4618.79,4681.40,4594.68,4651.87],['08/25',4654.11,4697.66,4605.17,4655.01],['08/26',4654.92,4670.86,4583.28,4597.33],
+      ['08/27',4596.75,4643.35,4566.17,4594.68],['08/28',4594.78,4631.13,4445.58,4454.41],['08/31',4453.21,4472.10,4396.48,4448.92],['09/01',4449.90,4465.55,4322.37,4329.50],['09/02',4330.70,4397.53,4282.71,4385.74],['09/03',4388.00046,4510.59991,4381.92893,4473.78645],['09/04',4473.54177,4514.11331,4368.52912,4430.05647]
+    ];
+    const eventMarkers = [
+      {key:'aug07',date:'08/07',index:11,label:'就业',tone:'#b8862f'},
+      {key:'aug12',date:'08/12',index:14,label:'CPI',tone:'#b8862f'},
+      {key:'aug19',date:'08/19',index:19,label:'财政回购',tone:'#8f6d2f'},
+      {key:'aug19fomc',date:'08/19',index:19,label:'FOMC纪要',tone:'#2d62a3'},
+      {key:'aug26',date:'08/26',index:24,label:'PCE',tone:'#b8862f'},
+      {key:'aug28',date:'08/28',index:26,label:'讲话',tone:'#2d62a3'},
+      {key:'aug21',date:'08/21',index:21,label:'延续',tone:'#5d7d6d'},
+      {key:'sep01',date:'09/01',index:28,label:'冲击',tone:'#9a4f64'},
+      {key:'nfp',date:'09/04',index:31,label:'非农',tone:'#b34c4d'}
+    ];
+    const eventStudy = {
+      aug07:{index:11,title:'08/07 · 就业：弱增长预期与避险不能混为一谈',copy:'8/7 现货收于 4,343.74，较前日上涨。已知事实是就业数据显著弱于调查预期；但黄金上涨本身不能证明市场已经交易衰退，仍需看2Y、实际收益率和美元是否同步给出宽松方向。',state:'已核验：BLS就业与XAU/USD现货日线 · 失业率与通胀传导仍需交叉确认'},
+      aug12:{index:14,title:'08/12 · CPI：数据符合预期时，价格反应更能暴露仓位',copy:'8/12 现货收于 4,408.70，事件日上涨。若实际数据与预期差不大，价格仍上涨，说明边际买盘可能在交易政策路径之外的结构需求；但次日回落意味着这不是稳定的新趋势确认。',state:'已核验：CPI事实与XAU/USD现货日线 · 数字共识需在正式日报逐项核验'},
+      aug19:{index:19,title:'08/19 · 财政回购：长端供给与信用溢价同时进入定价',copy:'现货从 4,334.68 收于 4,522.80，单日大幅上行。财政部回购扩大可能压低长端供给压力、改善期限结构交易，但不能把全部涨幅归因于公告；同日FOMC纪要与回购重叠，必须保留归因边界。',state:'已核验：财政公告 / XAU/USD现货日线 · 与FOMC纪要同窗，无法完全分离'},
+      aug19fomc:{index:19,title:'08/19 · FOMC纪要：鹰派背景没有阻止黄金上行',copy:'FOMC纪要偏鹰与财政回购发生在同一个交易日，黄金仍大幅上涨。这种背离说明单看“鹰派=黄金跌”会失效：市场可能在交易财政信誉、长端期限溢价和结构性配置，而不是只交易近端政策利率。',state:'已核验：FOMC纪要与XAU/USD现货日线 · 同日事件重叠，归因置信度中等'},
+      aug26:{index:24,title:'08/26 · PCE：通胀冲击先压价格，但未自动推翻长期叙事',copy:'8/26 现货收于 4,597.33，日内回撤。headline PCE高于文字中所述调查预期、核心符合预期；短线利空先通过实际利率和政策路径作用于价格，但还不能据此证明财政与央行购金逻辑失效。',state:'已核验：PCE事实 / XAU/USD现货日线 · 绝对共识值尚需补齐'},
+      aug28:{index:26,title:'08/28 · 央行年会讲话：曲线与黄金同时告诉我们机会成本上升',copy:'8/28 现货收于 4,454.41，较前日下跌；10Y实际收益率上行约8bp。政策讲话强调价格稳定，黄金回撤与机会成本上行同窗，属于相对完整的传导案例，但仍不能忽略地缘和仓位因素。',state:'已核验：讲话文本 / 实际收益率 / XAU/USD现货日线 · 美元同窗序列需持续核验'},
+      aug21:{index:21,title:'08/21 · 趋势延续：连续上行需要新增边际买家验证',copy:'8/21 收于 4,603.56，日内高点 4,632.61。价格延续可以与既有结构支持一致，但 ETF、CFTC 和央行数据各自具有滞后，不能从价格本身推出“资金已完成接力”。',state:'已核验：XAU/USD spot completed daily bar · 资金解释：滞后'},
+      sep01:{index:28,title:'09/01 · 冲击：先定义跌幅，再找传导通道',copy:'9/01 由 4,449.90 收于 4,329.50，完成日线下跌。当天应追踪实际收益率、美元和衍生品是否同向，才能区分宏观重定价、流动性冲击或去杠杆；本 Demo 不用未取得的实时衍生品填补归因。',state:'已核验：XAU/USD spot completed daily bar · 实时衍生品：缺口'},
+      nfp:{index:31,title:'09/04 · 非农：先是利率冲击，随后黄金出现相对承接',copy:'BLS公布8月非农 +16.2万、失业率4.1%、时薪同比+3.1%，且前两个月就业合计上修5.5万。Twelve Data XAU/USD 1小时：11:00 UTC收于4,467.51，事件窗口低至4,368.529，最大回撤约2.22%；15:00 UTC收于4,436.64，收复初始跌幅约68.8%。BTC同窗最大回撤约3.19%，至15:00 UTC仅修复约30.7%。',state:'已核验：BLS / Twelve Data XAU/USD 1h / BTC公开小时行情 · 缺口：30Y、DXY、实时实际收益率与衍生品同窗路径'}
+    };
+    let activeEventKey='nfp';
+    const eventMeta={aug07:{date:'08/07',type:'macro',typeLabel:'经济数据',importance:'high',importanceLabel:'高'},aug12:{date:'08/12',type:'macro',typeLabel:'经济数据',importance:'medium',importanceLabel:'中'},aug19:{date:'08/19',type:'fiscal',typeLabel:'财政事件',importance:'high',importanceLabel:'极高'},aug19fomc:{date:'08/19',type:'policy',typeLabel:'政策 / 讲话',importance:'high',importanceLabel:'高'},aug21:{date:'08/21',type:'market',typeLabel:'市场结构',importance:'medium',importanceLabel:'中'},aug26:{date:'08/26',type:'macro',typeLabel:'经济数据',importance:'high',importanceLabel:'高'},aug28:{date:'08/28',type:'policy',typeLabel:'政策 / 讲话',importance:'high',importanceLabel:'极高'},sep01:{date:'09/01',type:'market',typeLabel:'市场冲击',importance:'high',importanceLabel:'高'},nfp:{date:'09/04',type:'macro',typeLabel:'经济数据',importance:'high',importanceLabel:'极高'}};
+    const chartState={start:Math.max(0,candleData.length-30),span:Math.min(30,candleData.length)};
+    function updateChartWindow(){const output=document.getElementById('chart-window');if(!output)return;const start=Math.max(0,Math.min(chartState.start,Math.max(0,candleData.length-chartState.span))),end=Math.min(candleData.length,start+chartState.span);output.textContent=`${candleData[start][0]}—${candleData[end-1][0]} · ${end-start}/${candleData.length}根`;}
+    function candleDetails(index){const d=candleData[index];if(!d)return '';const previous=candleData[index-1]?.[4],change=previous==null?null:d[4]-previous,pct=previous==null?null:change/previous*100;return `<strong>${d[0]} · XAU/USD spot</strong><div class="ohlc-grid"><span>开盘 <b>${d[1].toFixed(2)}</b></span><span>收盘 <b>${d[4].toFixed(2)}</b></span><span>最高 <b>${d[2].toFixed(2)}</b></span><span>最低 <b>${d[3].toFixed(2)}</b></span><span>涨跌 <b>${change==null?'—':`${change>=0?'+':''}${change.toFixed(2)}`}</b></span><span>幅度 <b>${pct==null?'—':`${pct>=0?'+':''}${pct.toFixed(2)}%`}</b></span></div>`;}
+    function renderCandleInspector(index){const inspector=document.getElementById('candle-inspector');if(inspector)inspector.innerHTML=candleDetails(index);}
+    function showCandleTooltip(index,event){const tooltip=document.getElementById('candle-tooltip'),frame=tooltip?.parentElement,d=candleData[index];if(!tooltip||!frame||!d)return;tooltip.innerHTML=candleDetails(index);const box=frame.getBoundingClientRect(),left=Math.min(Math.max(8,event.clientX-box.left+14,8),Math.max(8,box.width-220)),top=Math.min(Math.max(8,event.clientY-box.top+14,8),Math.max(8,box.height-118));tooltip.style.left=`${left}px`;tooltip.style.top=`${top}px`;tooltip.hidden=false;}
+    function hideCandleTooltip(){const tooltip=document.getElementById('candle-tooltip');if(tooltip)tooltip.hidden=true;}
+    function movingAverage(index,period){if(index+1<period)return null;let total=0;for(let i=index-period+1;i<=index;i++)total+=candleData[i][4];return total/period;}
+    function maPath(period,color,start,visible,x,y){const points=visible.map((_,i)=>{const value=movingAverage(start+i,period);return value==null?null:`${x(i)},${y(value)}`}).filter(Boolean);return points.length<2?'':`<polyline points="${points.join(' ')}" fill="none" stroke="${color}" stroke-width="${period===5?'2.5':'2'}" stroke-linejoin="round" stroke-linecap="round" opacity=".92"/>`;}
+    function drawSpotChart(selectedIndex){
+      const svg=document.getElementById('spot-candle-chart'); if(!svg) return;
+      const W=820,H=345,L=58,R=22,T=18,B=45,start=Math.max(0,Math.min(chartState.start,Math.max(0,candleData.length-chartState.span))),end=Math.min(candleData.length,start+chartState.span),visible=candleData.slice(start,end), min=Math.floor(Math.min(...visible.map(d=>d[3]))/50)*50-50, max=Math.ceil(Math.max(...visible.map(d=>d[2]))/50)*50+50;
+      const y=v=>T+(max-v)/(max-min)*(H-T-B), x=i=>L+i*((W-L-R)/Math.max(1,visible.length-1));
+      chartState.start=start;
+      let out='<title>XAU/USD spot completed daily bars with MA5, MA10, MA20 and event markers</title><rect x="0" y="0" width="820" height="345" fill="#fffdf8"/>';
+      for(let n=0;n<5;n++){const v=min+(max-min)*n/4, yy=y(v);out+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#dfe3df" stroke-width="1"/><text x="${L-9}" y="${yy+3}" text-anchor="end" font-size="10" fill="#7b8a92" font-family="ui-monospace,monospace">${v.toFixed(0)}</text>`;}
+      out+=maPath(20,'#8b5b7a',start,visible,x,y)+maPath(10,'#24679b',start,visible,x,y)+maPath(5,'#b5832f',start,visible,x,y);
+      visible.forEach((d,i)=>{const originalIndex=start+i,[date,open,high,low,close]=d, xx=x(i), up=close>=open, color=up?'#bd4d4a':'#27866d', top=Math.min(y(open),y(close)), h=Math.max(3,Math.abs(y(open)-y(close))), selected=originalIndex===selectedIndex;out+=`<g opacity="${selected?'1':'.86'}"><line x1="${xx}" y1="${y(high)}" x2="${xx}" y2="${y(low)}" stroke="${color}" stroke-width="2"/><rect x="${xx-7}" y="${top}" width="14" height="${h}" fill="${color}" rx="1"/><rect class="candle-hit" data-candle-index="${originalIndex}" tabindex="0" role="button" aria-label="${date} XAU/USD OHLC" x="${xx-13}" y="${T}" width="26" height="${H-T-B}" fill="transparent"/>${selected?`<rect x="${xx-13}" y="${T}" width="26" height="${H-T-B}" fill="none" stroke="#c8a14d" stroke-width="1.5" stroke-dasharray="4 3"/>`:''}<text x="${xx}" y="${H-17}" text-anchor="middle" font-size="9" fill="#75848c" font-family="ui-monospace,monospace">${i%3===0||i===visible.length-1?date:''}</text>${eventMarkers.filter(m=>m.index===originalIndex).map((m,j)=>`<g class="event-marker" data-event="${m.key}" tabindex="0" role="button" aria-label="${m.date} ${m.label}"><line x1="${xx}" y1="${y(high)-5-j*13}" x2="${xx}" y2="${y(high)-18-j*13}" stroke="${m.tone}" stroke-width="1.5"/><circle cx="${xx}" cy="${y(high)-21-j*13}" r="3.5" fill="${m.tone}"/><text x="${xx+7}" y="${y(high)-18-j*13}" font-size="8" fill="${m.tone}" font-weight="700">${m.label}</text></g>`).join('')}</g>`;});
+      out+=`<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#aeb8b9" stroke-width="1"/><text x="${W-R}" y="${H-4}" text-anchor="end" font-size="9" fill="#7b8a92">红涨 · 绿跌 · 均线基于收盘价 · 拖动查看历史</text>`;
+      svg.innerHTML=out;
+      svg.querySelectorAll('.event-marker').forEach(marker=>{marker.addEventListener('pointerdown',event=>{event.stopPropagation();marker.setPointerCapture?.(event.pointerId);});marker.addEventListener('pointerup',event=>{event.stopPropagation();renderEvent(marker.dataset.event);marker.releasePointerCapture?.(event.pointerId);});marker.addEventListener('click',()=>renderEvent(marker.dataset.event));marker.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();renderEvent(marker.dataset.event);}});});
+      svg.querySelectorAll('.candle-hit').forEach(hit=>{const index=Number(hit.dataset.candleIndex);hit.addEventListener('pointerenter',event=>showCandleTooltip(index,event));hit.addEventListener('pointermove',event=>showCandleTooltip(index,event));hit.addEventListener('pointerleave',hideCandleTooltip);hit.addEventListener('click',()=>renderCandleInspector(index));hit.addEventListener('focus',()=>{const rect=hit.getBoundingClientRect();showCandleTooltip(index,{clientX:rect.left+rect.width/2,clientY:rect.top+18});renderCandleInspector(index);});hit.addEventListener('blur',hideCandleTooltip);hit.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();renderCandleInspector(index);}});});
+      updateChartWindow();
     }
-  ],
-  "exec": {
-    "points": [
-      {
-        "lamp": "bull",
-        "label": "市场状态",
-        "text": "上涨趋势中的加速阶段；最近收盘 4,603.56，30日累计 +11.45%。"
-      },
-      {
-        "lamp": "bull",
-        "label": "当前评级",
-        "text": "轻度看多；价格偏强，但实际收益率与资金连续性没有完成全链确认。"
-      },
-      {
-        "lamp": "bull",
-        "label": "第一驱动力",
-        "text": "弱就业与核心CPI低于预期，推动加息预期回落。"
-      },
-      {
-        "lamp": "neu",
-        "label": "已 Price In",
-        "text": "央行配置、去美元化、地缘和财政风险。"
-      },
-      {
-        "lamp": "bull",
-        "label": "最大正向预期差",
-        "text": "偏鹰FOMC纪要发布日，现货反而上涨4.34%。"
-      },
-      {
-        "lamp": "bear",
-        "label": "最大负向预期差",
-        "text": "实际收益率8月19日回落后，8月21日反弹至2.40%，短线仍未形成单向确认。"
-      },
-      {
-        "lamp": "bear",
-        "label": "证伪条件",
-        "text": "收盘跌破 4,300，或实际收益率持续上行并且价格跌破支持区。"
+    function setChartSpan(span){chartState.span=Math.min(candleData.length,span==='all'?candleData.length:Number(span));chartState.start=Math.max(0,candleData.length-chartState.span);drawSpotChart(eventStudy[activeEventKey]?.index??null);updateChartWindow();document.querySelectorAll('[data-chart-range]').forEach(button=>button.classList.toggle('active',button.dataset.chartRange===String(span)));}
+    function moveChart(delta){chartState.start=Math.max(0,Math.min(candleData.length-chartState.span,chartState.start+delta));drawSpotChart(eventStudy[activeEventKey]?.index??null);updateChartWindow();}
+    function renderEvent(key){const e=eventStudy[key];if(!e)return;activeEventKey=key;document.getElementById('event-reading').innerHTML=`<strong>${e.title}</strong><p>${e.copy}</p><span class="evidence-state">${e.state}</span>`;drawSpotChart(e.index);document.querySelectorAll('[data-event]').forEach(b=>b.classList.toggle('active',b.dataset.event===key));if(typeof renderEventNavigation==='function')renderEventNavigation();}
+    function renderEventNavigation(){const rail=document.getElementById('event-rail'),type=document.getElementById('event-type-filter')?.value||'all',importance=document.getElementById('event-importance-filter')?.value||'all',query=(document.getElementById('event-search')?.value||'').trim().toLowerCase();const entries=Object.entries(eventStudy).filter(([key,e])=>{const m=eventMeta[key]||{};const haystack=`${m.date||''} ${e.title} ${e.copy}`.toLowerCase();return(type==='all'||m.type===type)&&(importance==='all'||(importance==='high'?m.importance==='high':m.importance==='medium'))&&(!query||haystack.includes(query));});rail.innerHTML=entries.length?entries.map(([key,e])=>{const m=eventMeta[key]||{};const title=e.title.split('：')[0];return `<button class="event-selector${key===activeEventKey?' active':''}" type="button" role="tab" data-event="${key}" aria-selected="${key===activeEventKey}"><strong>${title}</strong><small>${m.typeLabel||'事件'} · ${m.importanceLabel||'未分级'}</small></button>`;}).join(''):'<div class="event-empty">没有符合条件的事件。可清空筛选或更换关键词。</div>';rail.querySelectorAll('[data-event]').forEach(button=>button.addEventListener('click',()=>renderEvent(button.dataset.event)));const count=document.getElementById('event-count');if(count)count.textContent=`显示 ${entries.length} / ${Object.keys(eventStudy).length} 个事件 · 同日事件按独立记录保留`}
+    function drawCurve(){const svg=document.getElementById('curve-chart');if(!svg)return;const values=[[4.41,4.63,5.25],[4.37,4.78,5.24]], labels=['2Y','10Y','30Y'], xs=[72,210,348], min=4.25,max=5.4,y=v=>160-(v-min)/(max-min)*112;let out='<rect width="420" height="190" fill="#fbf9f3"/>';[4.4,4.7,5.0,5.3].forEach(v=>{const yy=y(v);out+=`<line x1="34" y1="${yy}" x2="386" y2="${yy}" stroke="#dedfd9"/><text x="28" y="${yy+3}" text-anchor="end" font-size="9" fill="#839099">${v.toFixed(1)}</text>`;});values.forEach((row,j)=>{const color=j===0?'#a8b0ae':'#193945', dash=j===0?'5 4':'0';out+=`<polyline points="${row.map((v,i)=>`${xs[i]},${y(v)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="${j===0?'2':'3'}" stroke-dasharray="${dash}"/>`;row.forEach((v,i)=>out+=`<circle cx="${xs[i]}" cy="${y(v)}" r="${j===0?'4':'5'}" fill="${color}"/><text x="${xs[i]}" y="${y(v)-10-j*11}" text-anchor="middle" font-size="10" font-family="ui-monospace,monospace" fill="${color}">${v.toFixed(2)}%</text>`);});labels.forEach((l,i)=>out+=`<text x="${xs[i]}" y="181" text-anchor="middle" font-size="10" fill="#60717a">${l}</text>`);out+='<line x1="36" y1="18" x2="54" y2="18" stroke="#a8b0ae" stroke-width="2" stroke-dasharray="5 4"/><text x="60" y="21" font-size="9" fill="#74818a">09/03</text><line x1="112" y1="18" x2="130" y2="18" stroke="#193945" stroke-width="3"/><text x="136" y="21" font-size="9" fill="#40525a">09/04</text>';svg.innerHTML=out;}
+    const factorLabels=['美元','央行购金','收益率曲线','地缘 / 能源','ETF / 仓位','政策路径'];
+    const horizons={
+      short:{title:'短期 · 1—5 日',window:'NFP 后首个交易窗口',bull:[0.5,1.4,0.4,1.2,0.8,0.2],bear:[0.8,0.2,4.1,1.4,0.6,3.8],attention:[['收益率曲线',27],['政策路径',22],['美元',22],['地缘 / 能源',16],['ETF / 仓位',8],['央行购金',5]],bullCopy:'若黄金反弹要延续，长端 / 实际收益率必须不再顺着前端的偏鹰重定价上行；同时需取得现货同窗路径，而不是只看到事后价格。',bearCopy:'强于预期的就业数据先推高近端政策利率预期；若该冲击扩散至实际收益率与美元，黄金会面对更明确的机会成本逆风。',bullList:['待验证 · 长端收益率或实际利率回落','已知 · 结构性央行需求提供长期底盘','待验证 · 现货收复需完整OHLC确认'],bearList:['已知 · 事件后盘中快照显示2Y上行幅度大于10Y','已知 · 9/4日终曲线2s10s扩至41bp','缺口 · 30Y / DXY / XAU同窗路径未取得']},
+      medium:{title:'中期 · 1—4 周',window:'通胀、FOMC 与资金验证窗口',bull:[0.5,3.4,1.2,1.5,1.5,1.1],bear:[0.8,0.3,2.7,1.3,1.0,2.6],attention:[['收益率曲线',23],['政策路径',20],['央行购金',18],['美元',16],['地缘 / 能源',14],['ETF / 仓位',9]],bullCopy:'若PPI / CPI回落并让实际收益率下行，增长放缓会从背景切换为利多传导；ETF边际改善会把结构性需求变成价格确认。',bearCopy:'若通胀继续粘性、Fed维持限制性路径，曲线短端压力可能继续向实际收益率传导；高位多头且资金接力不足时，反弹更脆弱。',bullList:['待验证 · 通胀回落 → 实际收益率下行','已知 · 全球ETF与央行需求有结构支持','待验证 · 北美ETF连续日流量'],bearList:['已知 · 实际收益率仍处高位','待验证 · CPI / PPI意外上行','缺口 · 实时期权、CTA与杠杆数据']},
+      long:{title:'长期 · 3—12 月',window:'结构性配置与宏观制度窗口',bull:[0.2,4.2,1.0,2.0,1.2,1.0],bear:[0.4,0.2,1.8,1.4,0.6,1.5],attention:[['央行购金',30],['政策路径',20],['地缘 / 能源',17],['收益率曲线',15],['美元',10],['ETF / 仓位',8]],bullCopy:'长期配置真正依赖的是央行多元化、财政 / 地缘风险溢价与实际利率回落是否同步。它们构成底盘，但不替代短线价格验证。',bearCopy:'若实际收益率长期停在高位、美元信用风险没有转化为实际配置，长期叙事会被高机会成本抵消；叙事拥挤时还要防范风险溢价压缩。',bullList:['已知 · 央行购金是滞后但持续的结构证据','部分核验 · 地缘与财政溢价提供配置理由','待验证 · 实际利率中枢下移'],bearList:['已知 · 长期实际收益率仍偏高','部分核验 · 黄金叙事已部分共识化','缺口 · 风险溢价无法被可靠拆分']}
+    };
+    function radarPoints(values){const cx=215,cy=190,r=116;return values.map((v,i)=>{const a=-Math.PI/2+i*Math.PI*2/values.length, rr=r*v/5;return `${(cx+Math.cos(a)*rr).toFixed(1)},${(cy+Math.sin(a)*rr).toFixed(1)}`}).join(' ');}
+    function drawRadar(data){const svg=document.getElementById('factor-radar');if(!svg)return;const cx=215,cy=190,r=116;let out='<rect width="430" height="380" fill="#fbfaf6"/>';for(let level=1;level<=5;level++){const pts=Array.from({length:6},(_,i)=>{const a=-Math.PI/2+i*Math.PI*2/6,rr=r*level/5;return `${cx+Math.cos(a)*rr},${cy+Math.sin(a)*rr}`}).join(' ');out+=`<polygon points="${pts}" fill="none" stroke="#d9e0dd" stroke-width="1"/>`;};factorLabels.forEach((label,i)=>{const a=-Math.PI/2+i*Math.PI*2/6,tx=cx+Math.cos(a)*(r+32),ty=cy+Math.sin(a)*(r+28);out+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*r}" y2="${cy+Math.sin(a)*r}" stroke="#d9e0dd"/><text x="${tx}" y="${ty}" text-anchor="middle" font-size="11" fill="#586b75">${label}</text>`;});out+=`<polygon points="${radarPoints(data.bull)}" fill="rgba(25,167,122,.17)" stroke="#19a77a" stroke-width="3"/><polygon points="${radarPoints(data.bear)}" fill="rgba(223,94,92,.15)" stroke="#df5e5c" stroke-width="3"/>`;svg.innerHTML=out;}
+    function renderHorizon(key){const d=horizons[key];document.getElementById('horizon-title').textContent=d.title;document.getElementById('driver-window').textContent=d.window;document.getElementById('bull-chain').textContent=d.bullCopy;document.getElementById('bear-chain').textContent=d.bearCopy;document.getElementById('bull-evidence').innerHTML=d.bullList.map(x=>`<li><b>${x.split(' · ')[0]}</b>${x.split(' · ')[1]}</li>`).join('');document.getElementById('bear-evidence').innerHTML=d.bearList.map(x=>`<li><b>${x.split(' · ')[0]}</b>${x.split(' · ')[1]}</li>`).join('');document.getElementById('attention-grid').innerHTML=d.attention.map(([n,v])=>`<div class="attention-cell"><span>${n}</span><b>${v}</b><em>/ 100</em></div>`).join('');drawRadar(d);document.querySelectorAll('[data-horizon]').forEach(b=>b.classList.toggle('active',b.dataset.horizon===key));}
+    async function loadHourlyPipelineStatus(){
+      const note=document.getElementById('hourly-pipeline-status');
+      if(!note)return;
+      if(location.protocol==='file:'){
+        note.innerHTML='<b>小时数据管线</b><br>XAU/USD 1h：Twelve Data 已接通；当前为 file:// 预览，浏览器不会读取本地快照。用本地 HTTP 预览可显示实际根数与最新时间。美债仍按网页快照 / futures_proxy 分层记录，期货价格不转换成收益率。';
+        return;
       }
-    ]
-  },
-  "tech": {
-    "note": "K线截至 2026-08-21；Investing历史日线（XAU/USD现货）；仅获得23根，缺少7根；不标记为完整30日窗口；最新公开报价 4,656.20；日线结论仍以最近可得收盘为准。",
-    "dates": [
-      "07-22",
-      "07-23",
-      "07-24",
-      "07-27",
-      "07-28",
-      "07-29",
-      "07-30",
-      "07-31",
-      "08-03",
-      "08-04",
-      "08-05",
-      "08-06",
-      "08-07",
-      "08-10",
-      "08-11",
-      "08-12",
-      "08-13",
-      "08-14",
-      "08-17",
-      "08-18",
-      "08-19",
-      "08-20",
-      "08-21"
-    ],
-    "ohlc": [
-      [
-        4075.82,
-        4130.54,
-        4074.62,
-        4166.42
-      ],
-      [
-        4132.35,
-        4048.78,
-        4040.1,
-        4146.12
-      ],
-      [
-        4047.65,
-        4053.17,
-        4021.56,
-        4082.45
-      ],
-      [
-        4092.62,
-        4076.65,
-        4065.17,
-        4116.29
-      ],
-      [
-        4076.66,
-        4028.75,
-        4011.35,
-        4089.92
-      ],
-      [
-        4027.86,
-        4066.16,
-        3995.78,
-        4116.68
-      ],
-      [
-        4064.68,
-        4103.58,
-        4028.44,
-        4120.43
-      ],
-      [
-        4104.8,
-        4042.67,
-        4020.82,
-        4116.3
-      ],
-      [
-        4077.11,
-        4053.45,
-        4019.19,
-        4083.29
-      ],
-      [
-        4053.73,
-        4077.65,
-        4042.52,
-        4106.46
-      ],
-      [
-        4077.13,
-        4247.02,
-        4065.45,
-        4267.97
-      ],
-      [
-        4249.54,
-        4240.42,
-        4223.17,
-        4306
-      ],
-      [
-        4241.78,
-        4343.74,
-        4229.67,
-        4372.17
-      ],
-      [
-        4342.5,
-        4388.96,
-        4312.45,
-        4396.71
-      ],
-      [
-        4389.82,
-        4368.46,
-        4356.49,
-        4435.47
-      ],
-      [
-        4368.48,
-        4408.7,
-        4360.82,
-        4441.26
-      ],
-      [
-        4409.88,
-        4351.34,
-        4343.76,
-        4450.23
-      ],
-      [
-        4351.28,
-        4376.6,
-        4310.73,
-        4397.25
-      ],
-      [
-        4381.12,
-        4416.82,
-        4367.24,
-        4429.26
-      ],
-      [
-        4417.55,
-        4334.52,
-        4328.86,
-        4436.39
-      ],
-      [
-        4334.68,
-        4522.8,
-        4324.49,
-        4524.7
-      ],
-      [
-        4522.28,
-        4519.08,
-        4450.52,
-        4541.49
-      ],
-      [
-        4519.09,
-        4603.56,
-        4508.83,
-        4632.61
-      ]
-    ],
-    "pressureZone": {
-      "from": 4600,
-      "to": 4635
-    },
-    "supportZone": {
-      "from": 4500,
-      "to": 4525
-    },
-    "markLines": [
-      {
-        "y": 4635,
-        "name": "压力上沿 4,635",
-        "color": "#EF4444"
-      },
-      {
-        "y": 4525,
-        "name": "支持上沿 4,525",
-        "color": "#10B981"
-      },
-      {
-        "y": 4300,
-        "name": "结构失效 4,300",
-        "color": "#EF4444"
+      try{
+        const response=await fetch('runtime-data/xauusd-1h.json',{cache:'no-store'});
+        if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const data=await response.json(),bars=Array.isArray(data.bars)?data.bars:[],latest=bars.at(-1),partial=latest?.bar_status==='partial';
+        note.innerHTML=`<b>小时数据管线</b><br>XAU/USD 1h：Twelve Data 已接通 · 本地快照 ${bars.length} 根 · 最新 ${latest?.time_utc||'未知'}${partial?'（未完成）':'（已完成）'}。美债仍按网页快照 / futures_proxy 分层记录，期货价格不转换成收益率。`;
+      }catch(error){
+        note.innerHTML='<b>小时数据管线</b><br>XAU/USD 1h：采集器已接通，但本地快照当前不可读；页面保留缺口，不生成伪 K 线。美债仍按网页快照 / futures_proxy 分层记录，期货价格不转换成收益率。';
       }
-    ],
-    "pressureText": "压力区 4,600—4,635；当前报价位于压力区附近，需新增买盘或有效突破确认。",
-    "supportText": "支持区 4,500—4,525；跌破 4,300 才升级为趋势结构失效。",
-    "events": [
-      {
-        "id": "2026-07-29-0",
-        "date": "2026-07-29",
-        "label": "7月29日 FOMC",
-        "name": "FOMC",
-        "source": "FOMC / XAUUSD现货日线",
-        "index": 5,
-        "price": 4066.16,
-        "d0": 0.009285758609990591,
-        "d1": 0.009202785920868761,
-        "d3": -0.003125799279910302,
-        "d5": 0.04447931217659917,
-        "d0Text": "+0.93%",
-        "d1Text": "+0.92%",
-        "d3Text": "-0.31%",
-        "d5Text": "+4.45%",
-        "followThrough": "先涨后回",
-        "observation": "观察：事件日收盘 4,066.16，事件日相对前一交易日 +0.93%；D+1 +0.92%，D+3 -0.31%，D+5 +4.45%。当前窗口判定为“先涨后回”。",
-        "attribution": "归因推断：政策路径 → 实际收益率/美元 → 黄金价格。价格窗口只证明“事件后发生了什么”，不能单独证明唯一因果；需要与实际收益率、美元和后续承接一起确认。",
-        "counterEvidence": "反向证据：如果价格反应无法被实际收益率或美元确认，需保留空头回补与风险溢价解释。"
-      },
-      {
-        "id": "2026-08-07-1",
-        "date": "2026-08-07",
-        "label": "8月7日 就业",
-        "name": "就业",
-        "source": "BLS / XAUUSD现货日线",
-        "index": 12,
-        "price": 4343.74,
-        "d0": 0.024365510963536563,
-        "d1": 0.010410383678581159,
-        "d3": 0.014954854572327037,
-        "d5": 0.007564909501950101,
-        "d0Text": "+2.44%",
-        "d1Text": "+1.04%",
-        "d3Text": "+1.50%",
-        "d5Text": "+0.76%",
-        "followThrough": "上涨并延续",
-        "observation": "观察：事件日收盘 4,343.74，事件日相对前一交易日 +2.44%；D+1 +1.04%，D+3 +1.50%，D+5 +0.76%。当前窗口判定为“上涨并延续”。",
-        "attribution": "归因推断：增长与就业 → Fed路径预期 → 实际收益率/黄金。价格窗口只证明“事件后发生了什么”，不能单独证明唯一因果；需要与实际收益率、美元和后续承接一起确认。",
-        "counterEvidence": "反向证据：如果实际收益率随后重新上行，事件利多可能只留下短线价格冲击。"
-      },
-      {
-        "id": "2026-08-12-2",
-        "date": "2026-08-12",
-        "label": "8月12日 CPI",
-        "name": "CPI",
-        "source": "BLS / XAUUSD现货日线",
-        "index": 15,
-        "price": 4408.7,
-        "d0": 0.009211484138575088,
-        "d1": -0.013010638056569879,
-        "d3": 0.0018418127792774186,
-        "d5": 0.025880645088121268,
-        "d0Text": "+0.92%",
-        "d1Text": "-1.30%",
-        "d3Text": "+0.18%",
-        "d5Text": "+2.59%",
-        "followThrough": "上涨并延续",
-        "observation": "观察：事件日收盘 4,408.70，事件日相对前一交易日 +0.92%；D+1 -1.30%，D+3 +0.18%，D+5 +2.59%。当前窗口判定为“上涨并延续”。",
-        "attribution": "归因推断：通胀 → Fed反应函数 → 实际收益率/美元 → 黄金。价格窗口只证明“事件后发生了什么”，不能单独证明唯一因果；需要与实际收益率、美元和后续承接一起确认。",
-        "counterEvidence": "反向证据：事件日上涨后若短期回吐，说明通胀信息的利多没有完成趋势执行。"
-      },
-      {
-        "id": "2026-08-19-3",
-        "date": "2026-08-19",
-        "label": "8月19日 纪要",
-        "name": "FOMC纪要",
-        "source": "FOMC / XAUUSD现货日线",
-        "index": 20,
-        "price": 4522.8,
-        "d0": 0.0434373356219373,
-        "d1": -0.0008224993366940936,
-        "d3": null,
-        "d5": null,
-        "d0Text": "+4.34%",
-        "d1Text": "-0.08%",
-        "d3Text": "待完成",
-        "d5Text": "待完成",
-        "followThrough": "窗口未完成",
-        "observation": "观察：事件日收盘 4,522.80，事件日相对前一交易日 +4.34%；D+1 -0.08%，D+3 待完成，D+5 待完成。当前窗口判定为“窗口未完成”。",
-        "attribution": "归因推断：政策沟通 → 市场重新定价 → 风险溢价与现货承接。价格窗口只证明“事件后发生了什么”，不能单独证明唯一因果；需要与实际收益率、美元和后续承接一起确认。",
-        "counterEvidence": "反向证据：偏鹰信息与金价上涨并存，说明单一“Fed偏鹰所以黄金跌”的解释不足。"
-      }
-    ],
-    "deepdive": {
-      "title": "价格行为是否确认基本面？假突破风险？",
-      "qa": [
-        {
-          "q": "Q· 最新公开报价上涨，是否等于日线趋势已确认？",
-          "a": "A· 不等于。最新公开报价 4,656.20；日线结论仍以最近可得收盘为准。；日线判断仍以最近可得XAU/USD现货OHLC为基准。现货位于压力区附近时，突破需要收盘站稳并观察回踩承接。"
-        },
-        {
-          "q": "Q· 事件逻辑没有失效，价格为何仍可能回到事件前？",
-          "a": "A· 可能是市场提前定价释放、空头回补结束、实际收益率重新上行或新增买家不足。当前报告的负向预期差是：实际收益率8月19日回落后，8月21日反弹至2.40%，短线仍未形成单向确认。。"
-        },
-        {
-          "q": "Q· 当前技术结构最重要的错误条件是什么？",
-          "a": "A· 不是单日下跌，而是收盘跌破支持区后继续跌破 4,300，同时实际收益率持续上行。"
-        }
-      ]
     }
-  },
-  "factor": {
-    "radarIndicator": [
-      {
-        "name": "政策预期",
-        "max": 5
-      },
-      {
-        "name": "美元通道",
-        "max": 5
-      },
-      {
-        "name": "实际收益率",
-        "max": 5
-      },
-      {
-        "name": "央行配置",
-        "max": 5
-      },
-      {
-        "name": "ETF资金",
-        "max": 5
-      },
-      {
-        "name": "地缘/油价",
-        "max": 5
-      }
-    ],
-    "radarBull": [
-      5,
-      3.3,
-      2,
-      3,
-      1.5,
-      1
-    ],
-    "radarBear": [
-      1,
-      1,
-      3,
-      1,
-      2,
-      3
-    ],
-    "tailwind": [
-      "弱就业与核心CPI低于预期，推动加息预期回落。 → 市场重新评估Fed路径 → 黄金机会成本预期变化",
-      "事件后现货价格仍保持强势：偏鹰FOMC纪要发布日，现货反而上涨4.34%。",
-      "实际收益率连续序列最新 2.38%，同日状态为 下行",
-      "央行/长期配置属于结构性底盘，但不能直接替代短线买入信号",
-      "价格端：最近收盘 4,603.56，30日累计 +11.45%"
-    ],
-    "headwind": [
-      "实际收益率 下行，负向预期差：实际收益率8月19日回落后，8月21日反弹至2.40%，短线仍未形成单向确认。",
-      "ETF连续性：连续性未确认；GLD/IAU数据不足以确认8月边际买家",
-      "CFTC使用Legacy COT非商业口径，不能直接写成Managed Money交易动机",
-      "技术：价格接近压力区，若没有收盘站稳与回踩承接，突破仍可能只是冲高"
-    ],
-    "deepdive": {
-      "title": "真驱动 vs 伴随变量？实际收益率是否脱钩？",
-      "qa": [
-        {
-          "q": "Q· 这轮上涨的主体归因是什么？",
-          "a": "A· 当前最稳妥的主体归因是“弱就业与核心CPI低于预期，推动加息预期回落。”，但这仍是Inference，不是单一因果事实。实际收益率是核心约束，资金数据只用于判断谁在推动和能否延续。"
-        },
-        {
-          "q": "Q· 实际收益率与黄金是否脱钩？",
-          "a": "A· 目前只能说存在观察到的背离线索：实际收益率最新 2.38%，方向 下行；黄金价格仍处于 上涨趋势中的加速阶段。这支持“需要寻找额外风险溢价/资金解释”，不支持宣布永久脱钩。"
-        },
-        {
-          "q": "Q· 缺少ETF和高频资金数据还可以分析吗？",
-          "a": "A· 可以。价格、实际收益率、美元通道、事件反应和预期差完成主体归因；资金缺口只降低“谁在推动、是否有新买家”的结论权重，不阻断研究。"
-        }
-      ]
+    document.querySelectorAll('[data-chart-range]').forEach(button=>button.addEventListener('click',()=>setChartSpan(button.dataset.chartRange)));
+    document.getElementById('chart-reset')?.addEventListener('click',()=>{chartState.start=Math.max(0,candleData.length-chartState.span);drawSpotChart(eventStudy[activeEventKey]?.index??null);});
+    const spotChart=document.getElementById('spot-candle-chart');let chartDrag=null;
+    spotChart?.addEventListener('pointerdown',event=>{hideCandleTooltip();chartDrag={x:event.clientX,start:chartState.start};spotChart.classList.add('is-dragging');spotChart.setPointerCapture?.(event.pointerId);});
+    spotChart?.addEventListener('pointermove',event=>{if(!chartDrag)return;const rect=spotChart.getBoundingClientRect(),delta=Math.round((chartDrag.x-event.clientX)/Math.max(1,rect.width)*chartState.span),next=Math.max(0,Math.min(candleData.length-chartState.span,chartDrag.start+delta));if(next!==chartState.start){chartState.start=next;drawSpotChart(eventStudy[activeEventKey]?.index??null);}});
+    spotChart?.addEventListener('pointerup',event=>{chartDrag=null;spotChart.classList.remove('is-dragging');spotChart.releasePointerCapture?.(event.pointerId);});
+    spotChart?.addEventListener('pointercancel',()=>{chartDrag=null;spotChart.classList.remove('is-dragging');});
+    spotChart?.addEventListener('wheel',event=>{event.preventDefault();const oldSpan=chartState.span,next=Math.max(12,Math.min(candleData.length,oldSpan+(event.deltaY>0?4:-4))),center=chartState.start+oldSpan/2;chartState.span=next;chartState.start=Math.max(0,Math.min(candleData.length-next,Math.round(center-next/2)));drawSpotChart(eventStudy[activeEventKey]?.index??null);},{passive:false});
+    document.getElementById('mobile-section-jump')?.addEventListener('change',event=>{const target=event.target.value;if(target)location.hash=target;event.target.blur();});
+    ['event-type-filter','event-importance-filter','event-search'].forEach(id=>document.getElementById(id)?.addEventListener(id==='event-search'?'input':'change',renderEventNavigation));
+    function applyFreshReportView(){
+      const deep=document.querySelectorAll('.deep-grid .deep-card');
+      const freshCards=[
+        '<div class="deep-card-head"><h3>就业强劲，不等于黄金应该避险上涨</h3><small>09 · MACRO REGIME</small></div><p>9月4日公布的8月非农新增16.2万，失业率4.1%，平均时薪同比+3.1%，且前两月合计上修5.5万。它足以触发政策路径重估，但不足以单独定义美国经济重新加速或硬着陆。</p><p>增长下降+通胀下降会通过实际利率下行形成黄金顺风；增长下降+通胀上升则是避险利多与机会成本利空的双向冲击。周五价格先跌，说明第一轮交易偏向政策重定价，而不是“就业强劲→避险”。</p><p class="takeaway"><b>对交易的影响：</b>只有后续通胀走低、实际收益率回落且现货承接得到确认，增长放缓才会转化为黄金顺风。</p>',
+        '<div class="deep-card-head"><h3>收益率不是一个点，而是一条曲线</h3><small>10 · CURVE / REAL RATE</small></div><p>9/4官方日终，2Y、10Y、30Y分别为4.37%、4.78%、5.24%；相对9/3，2Y下降4bp，10Y上升15bp，30Y下降1bp。2s10s由22bp扩至41bp，10s30s由62bp收窄至46bp，说明10Y是当日的相对异常点，不能用“收益率整体上行”概括。</p><p>这组日终数据能证明曲线发生了分层重定价，但不能证明非农公布后每个期限的小时先后。黄金随后修复，可能与冲击未全面扩散、卖压耗尽、现货承接或空头回补有关；事件同窗数据不足，暂不归因于单一利率期限。</p><p class="takeaway"><b>对交易的影响：</b>每次事件都同时看2Y、10Y、30Y、实际利率和曲线斜率；先区分日终事实与盘中路径，再判断债市正在交易政策、增长、通胀还是期限溢价。</p>',
+        '<div class="deep-card-head"><h3>资金支持存在，但接力者不清楚</h3><small>13–14 · FLOWS</small></div><p>7月全球黄金ETF净流入约30亿美元、持仓增加23吨至4,068吨，说明中期结构性需求仍在；但北美年初至今仍净流出。CFTC最新可见报告是8/25周度期货证据，不替代XAU/USD现货。</p><p>这些证据都有滞后，不能解释9/4小时内黄金为何比BTC修复更强。实时期权、基差、IV、skew、gamma、OI和清算数据也未取得，因此只能说“结构底盘尚在”，不能说“新增买家已经接力”。</p><p class="takeaway"><b>对交易的影响：</b>反弹要升级，必须看到北美边际资金改善或同日衍生品确认，否则高位多头会放大回撤敏感度。</p>',
+        '<div class="deep-card-head"><h3>叙事正在从催化剂变成拥挤风险</h3><small>18–20 · REFLEXIVITY</small></div><p>地缘风险、央行多元化、美元信用和财政压力构成黄金的中期底盘，但不能解释9/4事件窗口的全部波动。周五先跌后修复，说明短线政策冲击与中期结构叙事发生了碰撞。</p><p>真正需要判断的是反身性方向：价格上涨带来ETF流入和多头增仓，是正向闭环；价格跌破4,383后若出现流出与去杠杆，则会转为负向闭环。当前ETF与实时OI不完整，只能判定“脆弱支持”。</p><p class="takeaway"><b>对交易的影响：</b>不用故事给价格设目标，用价格和资金确认故事是否仍在产生边际买家。</p>',
+        '<div class="deep-card-head"><h3>技术位是状态开关，不是预测目标</h3><small>25–26 · CONFIRMATION</small></div><p>4,383是近端支撑，4,283是更深的失效参考，4,449—4,466是反弹升级的确认区。9/4完整收盘为4,430.06，仍低于确认区；盘中小时反弹和日线收盘必须分开处理。</p><p>技术模块与宏观模块的关系是：价格反弹提出假设，实际收益率和资金流负责验证。若收盘不能站稳，反弹更接近事件后修复；若收盘确认且收益率回落，才是状态切换。</p><p class="takeaway"><b>对交易的影响：</b>当前不追价，等待“收盘+实际收益率+边际资金”形成共振。</p>',
+        '<div class="deep-card-head"><h3>数据缺口如何改变置信度</h3><small>15 · EVIDENCE DISCIPLINE</small></div><p>没有实时衍生品，就无法区分空头回补、多头追涨和现货杠杆变化；没有30Y、DXY与实际利率同窗路径，也不能把黄金反弹归因于单一债券期限或避险需求。</p><p>数据缺口不会自动制造看空结论，但会限制结论强度。当前评级保持Neutral，是因为已核验的价格、就业、日终曲线与中期流量证据相互冲突，而最能解释短线的几类数据尚未同日取得。</p><p class="takeaway"><b>对交易的影响：</b>把“等待确认”作为正式决策，而不是把证据不足伪装成高确定性观点。</p>'
+      ];
+      deep.forEach((card,i)=>{if(freshCards[i])card.innerHTML=freshCards[i];});
     }
-  },
-  "flow": {
-    "four": [
-      {
-        "name": "价格",
-        "lamp": "bull",
-        "text": "强势 — 收盘 4,603.56，最新报价 4,656.20"
-      },
-      {
-        "name": "资金",
-        "lamp": "neu",
-        "text": "待确认 — 连续性未确认，全球7月+$3bn"
-      },
-      {
-        "name": "仓位",
-        "lamp": "neu",
-        "text": "偏高/滞后 — 非商业净多 222,189"
-      },
-      {
-        "name": "宏观",
-        "lamp": "neu",
-        "text": "混合 — 实际收益率 2.38%，下行"
-      }
-    ],
-    "conclusion": "结论：价格维度偏强，宏观维度混合；资金和仓位用于判断行情能否延续，不承担第一驱动力归因。",
-    "table": [
-      {
-        "k": "XAU/USD现货收盘",
-        "v": "4,603.56",
-        "note": "2026-08-21",
-        "cls": "bull"
-      },
-      {
-        "k": "最新公开报价",
-        "v": "4,656.20",
-        "note": "2026-08-24T22:01:47.000Z",
-        "cls": "neu"
-      },
-      {
-        "k": "10Y实际收益率",
-        "v": "2.38%",
-        "note": "2026-08-24",
-        "cls": "neu"
-      },
-      {
-        "k": "CFTC非商业净多",
-        "v": "222,189",
-        "note": "2026-08-18",
-        "cls": "neu"
-      },
-      {
-        "k": "GLD/IAU代理",
-        "v": "全球7月+$3bn",
-        "note": "2026-07-31 · 连续性未确认",
-        "cls": "neu"
-      }
-    ],
-    "gapNote": "辅助数据只用于验证延续性；价格、支撑、压力和风险收益只使用XAU/USD现货OHLC。"
-  },
-  "narrative": {
-    "pct": 58,
-    "phaseText": "当前处于<b>扩散→共识观察区</b>：央行配置、去美元化、地缘和财政风险。已被市场广泛讨论，但8月上涨后是否有新的现货边际买家仍未确认。",
-    "items": [
-      {
-        "lamp": "neu",
-        "name": "反身性",
-        "text": "价格上涨已形成关注反馈，但新增资金闭环尚未核验"
-      },
-      {
-        "lamp": "neu",
-        "name": "地缘溢价",
-        "text": "需要区分避险通道与油价-通胀-利率通道"
-      },
-      {
-        "lamp": "neu",
-        "name": "信用溢价",
-        "text": "长期线索存在，短线扩张幅度未量化"
-      },
-      {
-        "lamp": "bull",
-        "name": "央行战略溢价",
-        "text": "属于长期结构性底盘，不直接转化为短线信号"
-      }
-    ]
-  },
-  "gap": {
-    "rows": [
-      {
-        "v": "就业",
-        "exp": "市场共识未在当前数据包核验",
-        "real": "非农-2.3万，失业率4.1%",
-        "status": "事实可用 / 共识缺口",
-        "cls": "neu"
-      },
-      {
-        "v": "CPI",
-        "exp": "市场共识未在当前数据包核验",
-        "real": "同比3.4%，核心2.5%",
-        "status": "事实可用 / 共识缺口",
-        "cls": "neu"
-      },
-      {
-        "v": "FOMC纪要后价格",
-        "exp": "偏鹰信息通常压制黄金",
-        "real": "偏鹰FOMC纪要发布日，现货反而上涨4.34%。",
-        "status": "价格反应与叙事冲突",
-        "cls": "bull"
-      },
-      {
-        "v": "实际收益率",
-        "exp": "若上行通常提高机会成本",
-        "real": "2.38% · 下行",
-        "status": "宏观与价格未完全同频",
-        "cls": "neu"
-      },
-      {
-        "v": "资金接力",
-        "exp": "突破需要新边际买家",
-        "real": "全球7月+$3bn · 连续性未确认",
-        "status": "资金连续性缺口",
-        "cls": "neu"
-      }
-    ],
-    "scenarios": {
-      "bull": {
-        "title": "Bull · 条件性看多",
-        "trigger": "站稳压力上沿；实际收益率回落；ETF流量代理满足持续性规则。",
-        "result": "价格突破后回踩承接，新的边际买家接力。",
-        "prob": "概率无法可靠估计",
-        "rr": "Calculation：上行31.44 / 回撤103.56，约 0.30:1"
-      },
-      "base": {
-        "title": "Base · 等待确认",
-        "trigger": "实际收益率维持当前区间；价格在支持与压力之间震荡；资金连续性未确认。",
-        "result": "基本面偏多但执行节奏不顺，等待资金数据。",
-        "prob": "概率无法可靠估计",
-        "rr": "Calculation：上行31.44 / 回撤103.56，约 0.30:1"
-      },
-      "bear": {
-        "title": "Bear · 结构失效",
-        "trigger": "收盘跌破失效位；实际收益率持续上行；ETF连续性确认流出。",
-        "result": "突破失败，负向反身性形成，风险溢价压缩。",
-        "prob": "概率无法可靠估计",
-        "rr": "Calculation：上行31.44 / 回撤103.56，约 0.30:1"
-      }
-    },
-    "deepdive": {
-      "title": "最大隐藏预期差？好消息出来会不会真涨？",
-      "qa": [
-        {
-          "q": "Q· 当前最大的隐藏预期差是什么？",
-          "a": "A· 不是黄金长期逻辑是否成立，而是8月上涨后是否出现新的现货边际买家。。如果好消息已经Price In，事件落地可能只带来确认而非新增上涨。"
-        },
-        {
-          "q": "Q· 如果事件逻辑未失效，但价格回到事件前，如何解释？",
-          "a": "A· 先区分预期释放、空头回补结束、实际收益率反向变化和边际买家不足；只有价格结构、实际收益率和风险溢价同时恶化，才升级为原交易逻辑失效。"
-        }
-      ]
+    renderEvent('nfp');renderEventNavigation();drawCurve();renderHorizon('short');loadHourlyPipelineStatus();applyFreshReportView();
+    document.querySelectorAll('[data-horizon]').forEach(b=>b.addEventListener('click',()=>renderHorizon(b.dataset.horizon)));
+    const groups = {market:'市场与研究框架',macro:'宏观与政策',flows:'资金与流动性',risk:'结构、情景与风险'};
+    const list = document.getElementById('module-list');
+    function render(filter='all'){
+      list.innerHTML='';
+      Object.keys(groups).forEach(group=>{
+        const items=modules.filter(m=>(filter==='all'||m.g===filter)&&m.g===group); if(!items.length) return;
+        const wrap=document.createElement('div'); wrap.className='module-group';
+        const label=document.createElement('div'); label.className='group-label'; label.textContent=groups[group]; wrap.appendChild(label);
+        items.forEach(m=>{
+          const d=document.createElement('details'); d.className='module'; if([2,5,8,9,10,13,14,15,25,26,30,35].includes(m.n)) d.open=true;
+          const status=m.s==='已核验'?'ok':m.s==='部分核验'?'partial':'gap';
+          d.innerHTML=`<summary><span class="num">${String(m.n).padStart(2,'0')}</span><span class="module-title"><b>${m.t}</b><span>${m.c}</span></span><span class="status ${status}">${m.s}</span></summary><div class="module-detail"><div class="detail-cell fact"><h3>FACT · 已核验事实</h3><p>${m.f}</p></div><div class="detail-cell infer"><h3>INFERENCE · 分析推理</h3><p>${m.i}</p></div><div class="detail-cell gap"><h3>DATA IMPACT · 数据影响</h3><p>${m.d}</p></div></div>`;
+          wrap.appendChild(d);
+        });
+        list.appendChild(wrap);
+      });
     }
-  },
-  "fail": [
-    {
-      "icon": "🔴",
-      "tag": "技术",
-      "text": "XAU/USD现货收盘跌破 4,300，并且不能快速收复"
-    },
-    {
-      "icon": "🔴",
-      "tag": "宏观",
-      "text": "实际收益率连续上行，价格同步跌破支持区"
-    },
-    {
-      "icon": "🔴",
-      "tag": "资金",
-      "text": "ETF代理连续性确认流出，且CFTC净多明显下降"
-    },
-    {
-      "icon": "🔴",
-      "tag": "叙事",
-      "text": "利多事件反复出现但价格不再创新高，正向反身性开始失效"
-    },
-    {
-      "icon": "🔴",
-      "tag": "数据",
-      "text": "历史OHLC或核心报价口径被证明错误，停止使用相关技术结论"
-    }
-  ],
-  "catalyst": {
-    "targetISO": "2026-08-28T00:00:00Z",
-    "targetLabel": "下一重要政策/宏观事件窗口（8/28）",
-    "timeline": [
-      {
-        "period": "1-7天",
-        "cls": "neu",
-        "items": "<b>8/26</b> 美国7月PCE · <b>8/28</b> 美国就业基准修订"
-      },
-      {
-        "period": "1-4周",
-        "cls": "neu",
-        "items": "<b>9/17</b> 美联储利率决议 · <b>日期待确认</b> 全球主要央行会议"
-      },
-      {
-        "period": "1-3月",
-        "cls": "bull",
-        "items": "美联储政策会议、全球主要央行会议（具体日期以官方日程为准）"
-      }
-    ],
-    "top3": [
-      {
-        "w": "高",
-        "text": "XAU/USD现货价格是否突破压力并回踩承接"
-      },
-      {
-        "w": "高",
-        "text": "10年期实际收益率方向与价格是否继续背离"
-      },
-      {
-        "w": "中",
-        "text": "GLD/IAU连续观察与CFTC后续仓位（仅辅助）"
-      }
-    ]
-  },
-  "final": {
-    "ratings": [
-      {
-        "label": "Long-term（12M+）",
-        "val": "🟡 结构性偏多 · 证据不完整",
-        "cls": "neu"
-      },
-      {
-        "label": "1–3 个月",
-        "val": "🟡 轻度看多",
-        "cls": "neu"
-      },
-      {
-        "label": "1–4 周",
-        "val": "🟡 高位震荡偏强",
-        "cls": "neu"
-      },
-      {
-        "label": "Current Bias",
-        "val": "🟡 不追涨，等待回踩承接或突破确认",
-        "cls": "neu"
-      }
-    ],
-    "ultimate": "现在黄金最值得交易的，不是追逐最新公开报价，而是等待 XAU/USD 现货在 4,500—4,525 支持区出现承接，或有效突破 4,635 后再评估趋势延续。"
-  },
-  "disclaimer": "仅供个人研究参考，不构成投资建议。"
-};
-/* ====================================================================
-   🔼🔼🔼  DATA 数据注入层结束  🔼🔼🔼
-==================================================================== */
-
-/* =================== 以下为渲染逻辑（框架锁定，勿改） =================== */
-(function(){
-  function lamp(cls){ return '<span class="lamp lamp-'+cls+'"></span>'; }
-  function deepdiveHTML(dd){
-    if(!dd) return '';
-    var h = '<div class="coll-toggle flex items-center gap-1 font-bold text-[13.5px]" style="color:#5B4312;" onclick="toggleColl(this)"><span class="chev">▶</span>📝 深度推演：'+dd.title+'</div><div class="coll mt-2 space-y-2 text-[13px]">';
-    dd.qa.forEach(function(it){ h += '<p><b>'+it.q+'</b><br>'+it.a+'</p>'; });
-    h += '</div>';
-    return h;
-  }
-  function eventSummaryHTML(ev){
-    if(!ev) return '<div class="rounded-lg p-3 text-[12px]" style="background:#FFF8E8;border:1px solid #ECD9A8;">当前没有可对齐的事件节点。</div>';
-    return '<div class="rounded-lg p-2.5" style="background:#FFFCF7;border:1px solid #ECD9A8;">'
-      + '<div class="grid grid-cols-4 gap-2">'
-      + '<div class="event-kpi"><span>事件日</span><b>'+ev.d0Text+'</b></div>'
-      + '<div class="event-kpi"><span>D+1交易日</span><b>'+ev.d1Text+'</b></div>'
-      + '<div class="event-kpi"><span>D+3交易日</span><b>'+ev.d3Text+'</b></div>'
-      + '<div class="event-kpi"><span>D+5交易日</span><b>'+ev.d5Text+'</b></div>'
-      + '</div>'
-      + '<div class="mt-2 text-[12px]"><b style="color:#5B4312;">'+ev.label+' · '+ev.followThrough+'</b><br>'+ev.observation+'</div>'
-      + '<div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-[11.5px]">'
-      + '<div class="rounded p-2" style="background:#EEF9F5;border:1px solid #CFE3D3;"><b style="color:#0F8A68;">归因推断</b><br>'+ev.attribution+'</div>'
-      + '<div class="rounded p-2" style="background:#FFF1F0;border:1px solid #F0C4BD;"><b style="color:#C53D3D;">反向证据</b><br>'+ev.counterEvidence+'</div>'
-      + '</div></div>';
-  }
-
-  // 模块一 Header
-  document.getElementById('meta-sub').textContent = '报告日期 ' + DATA.meta.reportDate + '（' + DATA.meta.weekday + '）';
-  document.getElementById('meta-deadline').textContent = '截至 ' + DATA.meta.reportDate + ' · XAU/USD现货';
-
-  // KPI 价格条
-  var kpiHTML = '';
-  DATA.kpi.forEach(function(k){
-    var dirCls = k.dir === 'up' ? 'text-bull px-up' : (k.dir === 'down' ? 'text-bear px-down' : 'text-ink');
-    kpiHTML += '<div class="panel px-3 py-2 text-center"><div class="text-[11px]" style="color:#6B7280;">'+k.label+'</div><div class="text-lg font-bold '+dirCls+'">'+k.value+'</div><div class="text-[10px]" style="color:#6B7280;">'+k.chg+'</div></div>';
-  });
-  document.getElementById('kpi-bar').innerHTML = kpiHTML;
-
-  // 模块二 Executive Summary
-  var execHTML = '';
-  DATA.exec.points.forEach(function(p){
-    execHTML += '<div class="flex items-start gap-2">'+lamp(p.lamp)+'<div><b>'+p.label+'</b>：'+p.text+'</div></div>';
-  });
-  document.getElementById('exec-body').innerHTML = execHTML;
-
-  // 模块八 失效条件
-  var failHTML = '';
-  DATA.fail.forEach(function(f){
-    failHTML += '<li class="flex gap-2"><span>'+f.icon+'</span><span><b class="text-bear">'+f.tag+'</b>：'+f.text+'</span></li>';
-  });
-  document.getElementById('fail-body').innerHTML = failHTML;
-
-  // 模块九 最终判断
-  var finHTML = '';
-  DATA.final.ratings.forEach(function(r){
-    finHTML += '<div class="flex justify-between border-b pb-1" style="border-color:#E8E3D8;"><span class="text-sub">'+r.label+'</span><b class="text-'+r.cls+'">'+r.val+'</b></div>';
-  });
-  finHTML += '<div class="mt-3 rounded-lg p-3" style="background:linear-gradient(135deg,#FDF6E3,#FBF3E0);border:1px solid #ECD9A8;"><div class="font-bold text-[13px]" style="color:#5B4312;">💡 终极一句话</div><p class="text-[13px] mt-1">'+DATA.final.ultimate+'</p></div>';
-  document.getElementById('final-body').innerHTML = finHTML;
-
-  // 模块三 技术结构 - 支撑/压力文字
-  var lvHTML = '';
-  lvHTML += '<div class="rounded-lg p-2" style="background:#FDF0EF;border:1px solid #F0C4BD;"><div class="font-bold text-bear mb-1">压力区（红）</div><div>'+DATA.tech.pressureText+'</div></div>';
-  lvHTML += '<div class="rounded-lg p-2" style="background:#EAF3EA;border:1px solid #CFE3D3;"><div class="font-bold text-bull mb-1">支撑区（绿）</div><div>'+DATA.tech.supportText+'</div></div>';
-  document.getElementById('tech-levels').innerHTML = lvHTML;
-  document.getElementById('tech-deepdive').innerHTML = deepdiveHTML(DATA.tech.deepdive);
-  var eventButtons = '';
-  (DATA.tech.events || []).forEach(function(ev, i){
-    eventButtons += '<button type="button" class="event-card p-2" data-event-index="'+i+'" onclick="selectEvent('+i+')"><b class="block text-[12px]" style="color:#5B4312;">'+ev.label+'</b><span class="block text-[10.5px] mt-1" style="color:#6B7280;">事件日 '+ev.d0Text+' · D+3 '+ev.d3Text+'</span></button>';
-  });
-  document.getElementById('event-buttons').innerHTML = eventButtons || '<div class="text-[12px]" style="color:#6B7280;">暂无可对齐事件</div>';
-
-  // 模块四 多因子 - 顺风/逆风链
-  var chHTML = '';
-  chHTML += '<div class="rounded-lg p-3" style="background:#EAF3EA;border:1px solid #CFE3D3;"><div class="font-bold text-bull mb-1">🟢 顺风传导链（主导）</div>';
-  DATA.factor.tailwind.forEach(function(s){ chHTML += '<p class="mb-1">'+s+'</p>'; });
-  chHTML += '</div>';
-  chHTML += '<div class="rounded-lg p-3" style="background:#FDF0EF;border:1px solid #F0C4BD;"><div class="font-bold text-bear mb-1">🔴 逆风传导链（隐忧）</div>';
-  DATA.factor.headwind.forEach(function(s){ chHTML += '<p class="mb-1">'+s+'</p>'; });
-  chHTML += '</div>';
-  document.getElementById('factor-chains').innerHTML = chHTML;
-  document.getElementById('factor-deepdive').innerHTML = deepdiveHTML(DATA.factor.deepdive);
-
-  // 模块七 预期差表
-  var gapHTML = '';
-  DATA.gap.rows.forEach(function(r){
-    gapHTML += '<tr><td class="p-2 border font-semibold" style="border-color:#E8E3D8;">'+r.v+'</td><td class="p-2 border" style="border-color:#E8E3D8;">'+r.exp+'</td><td class="p-2 border" style="border-color:#E8E3D8;">'+r.real+'</td><td class="p-2 border text-'+r.cls+' font-semibold" style="border-color:#E8E3D8;">'+r.status+'</td></tr>';
-  });
-  document.getElementById('gap-rows').innerHTML = gapHTML;
-
-  // 模块七 情景 Tab 按钮 + 面板
-  var order = ['bull','base','bear'];
-  var labels = { bull:'🟢 BULL', base:'🟡 BASE', bear:'🔴 BEAR' };
-  var colors = { bull:'#10B981', base:'#F59E0B', bear:'#EF4444' };
-  var bgMap = { bull:'#F4FAF5', base:'#FDFAF1', bear:'#FDF6F5' };
-  var bdMap = { bull:'#CFE3D3', base:'#ECD9A8', bear:'#F0C4BD' };
-  var btnHTML = '', panHTML = '';
-  order.forEach(function(k, i){
-    btnHTML += '<button class="tab-btn px-3 py-1.5 rounded-lg text-[13px] font-bold text-white" style="background:'+colors[k]+';opacity:'+(i===0?'1':'0.55')+';" data-target="tab-'+k+'" onclick="switchTab(this)">'+labels[k]+'</button>';
-  });
-  order.forEach(function(k, i){
-    var s = DATA.gap.scenarios[k];
-    panHTML += '<div id="tab-'+k+'" class="tab-panel '+(i===0?'active':'')+' mt-2 rounded-lg p-3 text-[13px]" style="background:'+bgMap[k]+';border:1px solid '+bdMap[k]+';"><b class="text-'+k+'">'+s.title+'</b><br>触发：'+s.trigger+'<br>结果：'+s.result+'<br>概率：'+s.prob+' · R/R：'+s.rr+'</div>';
-  });
-  document.getElementById('scenario-btns').innerHTML = btnHTML;
-  document.getElementById('scenario-panels').innerHTML = panHTML;
-  document.getElementById('gap-deepdive').innerHTML = deepdiveHTML(DATA.gap.deepdive);
-
-  // 模块五 资金流四维
-  var flHTML = '';
-  DATA.flow.four.forEach(function(f){
-    flHTML += '<div class="flex items-center gap-2">'+lamp(f.lamp)+'<b>'+f.name+'</b> '+f.text+'</div>';
-  });
-  document.getElementById('flow-four').innerHTML = flHTML;
-  document.getElementById('flow-concl').innerHTML = DATA.flow.conclusion;
-  var flTab = '';
-  DATA.flow.table.forEach(function(t){
-    flTab += '<div class="flex justify-between"><span class="text-sub">'+t.k+'</span><b>'+t.v+'</b><span class="text-'+t.cls+'">'+t.note+'</span></div>';
-  });
-  document.getElementById('flow-table').innerHTML = flTab;
-  document.getElementById('flow-gap').textContent = '';
-
-  // 模块六 叙事生命周期
-  var nbHTML = '<div class="flex justify-between text-[10.5px] mb-1" style="color:#6B7280;"><span>①早期</span><span>②扩散</span><span>③共识</span><span>④拥挤</span><span>⑤失效</span></div><div class="relative h-2.5 rounded-full" style="background:#E8E3D8;"><div class="absolute inset-y-0 left-0 rounded-full" style="width:'+DATA.narrative.pct+'%;background:linear-gradient(90deg,#10B981,#F59E0B);"></div><div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-white shadow" style="left:'+DATA.narrative.pct+'%;background:#F59E0B;"></div></div>';
-  document.getElementById('narrative-bar').innerHTML = nbHTML;
-  document.getElementById('narrative-phase').innerHTML = DATA.narrative.phaseText;
-  var niHTML = '';
-  DATA.narrative.items.forEach(function(it){
-    niHTML += '<div class="flex items-center gap-2">'+lamp(it.lamp)+'<b>'+it.name+'</b>：'+it.text+'</div>';
-  });
-  document.getElementById('narrative-items').innerHTML = niHTML;
-
-  // 模块八 催化剂倒计时 + 时间轴 + Top3
-  document.getElementById('countdown-label').textContent = '距 ' + DATA.catalyst.targetLabel;
-  var tlHTML = '';
-  DATA.catalyst.timeline.forEach(function(t){
-    tlHTML += '<div class="flex gap-2"><span class="text-'+t.cls+' font-bold">'+t.period+'</span><span>'+t.items+'</span></div>';
-  });
-  document.getElementById('catalyst-timeline').innerHTML = tlHTML;
-  var t3HTML = '';
-  DATA.catalyst.top3.forEach(function(t){
-    t3HTML += '<div class="flex items-center gap-2"><span class="text-bear font-bold w-8">'+t.w+'</span><span>'+t.text+'</span></div>';
-  });
-  document.getElementById('top3').innerHTML = t3HTML;
-
-  // 免责声明
-  document.getElementById('disclaimer-text').textContent = DATA.disclaimer;
-
-  // ===== 交互函数 =====
-  window.toggleColl = function(el){
-    el.classList.toggle('open');
-    var body = el.nextElementSibling;
-    if(body && body.classList.contains('coll')){ body.classList.toggle('open'); }
-  };
-  window.switchTab = function(btn){
-    var group = btn.parentElement;
-    group.querySelectorAll('.tab-btn').forEach(function(b){ b.style.opacity = '0.55'; });
-    btn.style.opacity = '1';
-    var targetId = btn.getAttribute('data-target');
-    var section = group.parentElement;
-    section.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
-    var t = document.getElementById(targetId);
-    if(t) t.classList.add('active');
-  };
-
-  // ===== 倒计时 =====
-  function tickCountdown(){
-    var target = new Date(DATA.catalyst.targetISO).getTime();
-    var now = Date.now();
-    var diff = target - now;
-    if(diff < 0){ document.getElementById('countdown').textContent = '已开始'; return; }
-    var d = Math.floor(diff/86400000);
-    var h = Math.floor(diff%86400000/3600000);
-    var m = Math.floor(diff%3600000/60000);
-    document.getElementById('countdown').textContent = d + '天 ' + h + '时 ' + m + '分';
-  }
-  tickCountdown();
-  setInterval(tickCountdown, 60000);
-
-  // ===== ECharts K线 =====
-  var closes = DATA.tech.ohlc.map(function(d){ return d[1]; });
-  function calcMA(n){
-    var r = [];
-    for(var i=0;i<closes.length;i++){
-      if(i<n-1){ r.push('-'); }
-      else{ var s=0; for(var j=0;j<n;j++){ s+=closes[i-j]; } r.push(+(s/n).toFixed(1)); }
-    }
-    return r;
-  }
-  var kline = echarts.init(document.getElementById('kline'));
-  var maLines = [
-    { name:'MA5',  n:5,  c:'#C9A24B' },
-    { name:'MA10', n:10, c:'#4A7DBD' },
-    { name:'MA20', n:20, c:'#8A6D2F' }
-  ];
-  var kSeries = [
-    { name:'日K', type:'candlestick', data:DATA.tech.ohlc,
-      itemStyle:{ color:'#EF4444', color0:'#10B981', borderColor:'#EF4444', borderColor0:'#10B981' },
-      markArea:{ silent:true, data:[
-        [ { name:'压力区', yAxis:DATA.tech.pressureZone.from, itemStyle:{color:'rgba(239,68,68,0.06)'} }, { yAxis:DATA.tech.pressureZone.to } ],
-        [ { name:'支撑区', yAxis:DATA.tech.supportZone.from,  itemStyle:{color:'rgba(16,185,129,0.08)'} }, { yAxis:DATA.tech.supportZone.to } ]
-      ]},
-      markLine:{ silent:true, symbol:'none', label:{ color:'#8A6D2F', fontSize:9 },
-        data: DATA.tech.markLines.map(function(m){ return { yAxis:m.y, name:m.name, lineStyle:{ color:m.color, type:'dashed' } }; }) }
-    }
-  ];
-  var eventSeries = { name:'事件节点', type:'scatter', symbol:'circle', z:8,
-    itemStyle:{ color:'#C9A24B', borderColor:'#FFFFFF', borderWidth:2 },
-    label:{ position:'top', color:'#8A6D2F', fontSize:9 },
-    data:[]
-  };
-  function eventSeriesData(selectedIndex){
-    return (DATA.tech.events || []).filter(function(ev){ return ev.index >= 0 && ev.price !== null; }).map(function(ev){
-      var selected = DATA.tech.events.indexOf(ev) === selectedIndex;
-      return { value:[ev.index, ev.price], name:ev.label, label:{show:selected, formatter:ev.label}, symbolSize:selected ? 18 : 10, itemStyle:{color:selected ? '#8A6D2F' : '#C9A24B', borderColor:'#FFFFFF', borderWidth:2} };
-    });
-  }
-  kSeries.push(eventSeries);
-  maLines.forEach(function(ma){
-    kSeries.push({ name:ma.name, type:'line', data:calcMA(ma.n), smooth:true, showSymbol:false, lineStyle:{ width:1, color:ma.c } });
-  });
-  kline.setOption({
-    tooltip:{ trigger:'axis', axisPointer:{ type:'cross' } },
-    legend:{ data:['日K','MA5','MA10','MA20'], top:0 },
-    grid:{ left:48, right:16, top:30, bottom:28 },
-    xAxis:{ type:'category', data:DATA.tech.dates, boundaryGap:true },
-    yAxis:{ scale:true },
-    dataZoom:[{ type:'inside', start:15, end:100 }],
-    series: kSeries
-  });
-
-  window.selectEvent = function(index){
-    var ev = (DATA.tech.events || [])[index];
-    if(!ev) return;
-    document.querySelectorAll('.event-card').forEach(function(card){ card.classList.toggle('active', Number(card.getAttribute('data-event-index')) === index); });
-    document.getElementById('event-summary').innerHTML = eventSummaryHTML(ev);
-    eventSeries.data = eventSeriesData(index);
-    kline.setOption({series:kSeries});
-  };
-  if((DATA.tech.events || []).length){ window.selectEvent((DATA.tech.events || []).length - 1); }
-
-  // ===== ECharts 雷达 =====
-  var radar = echarts.init(document.getElementById('radar'));
-  radar.setOption({
-    tooltip:{},
-    legend:{ data:['利多强度','利空强度'], top:0 },
-    radar:{
-      indicator: DATA.factor.radarIndicator,
-      radius:'62%',
-      axisName:{ color:'#6B7280', fontSize:11 }
-    },
-    series:[{
-      type:'radar',
-      data:[
-        { value:DATA.factor.radarBull, name:'利多强度', areaStyle:{color:'rgba(16,185,129,0.18)'}, lineStyle:{color:'#10B981'}, itemStyle:{color:'#10B981'} },
-        { value:DATA.factor.radarBear, name:'利空强度', areaStyle:{color:'rgba(239,68,68,0.15)'}, lineStyle:{color:'#EF4444'}, itemStyle:{color:'#EF4444'} }
-      ]
-    }]
-  });
-
-  window.addEventListener('resize', function(){ kline.resize(); radar.resize(); });
-})();
-</script>
+    render();
+    document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render(btn.dataset.filter)}));
+  </script>
 </body>
 </html>
