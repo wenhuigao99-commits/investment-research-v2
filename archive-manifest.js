@@ -1,3 +1,1 @@
-window.REPORT_ARCHIVE = [
-  {date:'2026-09-04',href:'2026-09-04.html',title:'非农事件后可视化日报',type:'日终可视化',summary:'跨资产机制、事件研究、2Y/10Y/30Y曲线和35模块审计版。'}
-];
+window.REPORT_ARCHIVE = [{"date":"2026-09-09","href":"2026-09-09.html","title":"2026-09-09 黄金 XAU/USD 研究报告","type":"日终研究","summary":"按报告日期保存的黄金 XAU/USD 日报归档。"},{"date":"2026-09-04","href":"2026-09-04.html","title":"2026-09-04 黄金 XAU/USD 研究报告","type":"日终研究","summary":"黄金 XAU/USD 日报历史归档。"}];
