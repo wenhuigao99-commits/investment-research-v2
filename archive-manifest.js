@@ -1,1 +1,1 @@
-window.REPORT_ARCHIVE = [{"date":"2026-09-09","href":"2026-09-09.html","title":"2026-09-09 黄金 XAU/USD 研究报告","type":"日终研究","summary":"按报告日期保存的黄金 XAU/USD 日报归档。"},{"date":"2026-09-04","href":"2026-09-04.html","title":"2026-09-04 黄金 XAU/USD 研究报告","type":"日终研究","summary":"黄金 XAU/USD 日报历史归档。"}];
+window.REPORT_ARCHIVE = [{"date":"2026-09-09","href":"2026-09-09.html","title":"2026-09-09 黄金 XAU/USD 研究报告","type":"日终研究","summary":"黄金 XAU/USD 日报历史归档。"},{"date":"2026-09-04","href":"2026-09-04.html","title":"2026-09-04 黄金 XAU/USD 研究报告","type":"日终研究","summary":"黄金 XAU/USD 日报历史归档。"}];
